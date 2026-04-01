@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Sans Gluten Express</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="container nav">
+        <div class="logo">Sans Gluten Express - Admin</div>
+        <div class="nav-actions">
+          <a class="btn btn-light" href="./index.html">Voir le site</a>
+          <button id="logout-btn" class="btn btn-outline hidden" type="button">Deconnexion</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container section">
+      <section id="login-section" class="admin-card admin-login">
+        <h2>Connexion administrateur</h2>
+        <p class="admin-hint">
+          Compte cree avec <code>npm run seed:admin</code> (identifiants dans <code>.env</code> :
+          <code>ADMIN_SEED_USERNAME</code> / <code>ADMIN_SEED_PASSWORD</code>).
+        </p>
+        <form id="login-form" class="grid">
+          <label>
+            Identifiant
+            <input type="text" name="username" autocomplete="username" required />
+          </label>
+          <label>
+            Mot de passe
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <div class="admin-toolbar">
+            <button class="btn btn-primary" type="submit">Se connecter</button>
+          </div>
+        </form>
+        <p id="login-error" class="admin-error hidden" role="alert"></p>
+      </section>
+
+      <section id="dashboard" class="hidden">
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab admin-tab--active" data-tab="orders">Commandes</button>
+          <button type="button" class="admin-tab" data-tab="products">Plats et photos</button>
+        </div>
+
+        <div id="pane-orders" class="admin-pane">
+          <div class="admin-card">
+            <h2>Commandes recues</h2>
+            <div class="admin-toolbar">
+              <button id="refresh-btn" class="btn btn-secondary" type="button">Rafraichir</button>
+              <button id="export-btn" class="btn btn-secondary" type="button">Exporter CSV</button>
+              <button id="clear-btn" class="btn btn-secondary" type="button">Supprimer toutes les commandes</button>
+            </div>
+            <p id="admin-error" class="admin-error hidden" role="alert"></p>
+            <div id="admin-empty" class="hidden">Aucune commande pour le moment.</div>
+            <table id="orders-table" class="hidden">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Plats</th>
+                  <th>Total</th>
+                  <th>Paiement</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="orders-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="pane-products" class="admin-pane hidden">
+          <div class="admin-card">
+            <h2 id="product-form-title">Ajouter un plat</h2>
+            <form id="product-form" class="product-form">
+              <input type="hidden" id="product-editing-id" value="" />
+              <div class="grid">
+                <label>
+                  Nom
+                  <input type="text" id="pf-name" required />
+                </label>
+                <label>
+                  Prix (EUR)
+                  <input type="number" id="pf-price" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Ordre d'affichage
+                  <input type="number" id="pf-sort" value="0" step="1" />
+                </label>
+                <label class="admin-checkbox">
+                  <input type="checkbox" id="pf-active" checked />
+                  Visible sur le site
+                </label>
+              </div>
+              <label>
+                Description
+                <textarea id="pf-desc" rows="2"></textarea>
+              </label>
+              <label>
+                Photo (JPEG, PNG, WebP, GIF — max 3 Mo)
+                <input type="file" id="pf-image" accept="image/jpeg,image/png,image/webp,image/gif" />
+              </label>
+              <div class="admin-toolbar">
+                <button class="btn btn-primary" type="submit" id="pf-submit">Enregistrer le plat</button>
+                <button class="btn btn-secondary hidden" type="button" id="pf-cancel-edit">Annuler la modification</button>
+              </div>
+            </form>
+            <p id="product-error" class="admin-error hidden" role="alert"></p>
+          </div>
+
+          <div class="admin-card admin-card--table">
+            <h2>Plats en base</h2>
+            <p id="products-loading">Chargement...</p>
+            <div id="products-empty" class="hidden">Aucun plat. Ajoutez-en ci-dessus.</div>
+            <table id="products-table" class="hidden">
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Nom</th>
+                  <th>Prix</th>
+                  <th>Visible</th>
+                  <th>Ordre</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>
