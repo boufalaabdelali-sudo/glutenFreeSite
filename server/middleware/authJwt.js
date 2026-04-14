@@ -18,4 +18,17 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, getJwtSecret };
+function requireRole(allowedRoles) {
+  const list = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  return (req, res, next) => {
+    if (!req.admin) {
+      return res.status(401).json({ error: "Session invalide." });
+    }
+    if (!list.includes(req.admin.role)) {
+      return res.status(403).json({ error: "Droits insuffisants." });
+    }
+    return next();
+  };
+}
+
+module.exports = { requireAuth, requireRole, getJwtSecret };

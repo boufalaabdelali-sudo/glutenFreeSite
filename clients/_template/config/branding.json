@@ -1,0 +1,27 @@
+{
+  "siteName": "Nom du client",
+  "businessType": "retail",
+  "theme": {
+    "primary": "#2563eb",
+    "primaryDark": "#1d4ed8",
+    "heroGradient": "135deg, #1e3a8a, #3b82f6",
+    "badgeBg": "rgba(255, 255, 255, 0.25)"
+  },
+  "images": {
+    "favicon": "/assets/branding/favicon.ico",
+    "logo": "/assets/branding/logo.png",
+    "heroBackground": "/assets/branding/hero.jpg"
+  },
+  "contact": {
+    "whatsapp": "33600000000",
+    "email": "contact@client.fr",
+    "stripePaymentLink": ""
+  },
+  "texts": {
+    "heroBadge": "Nouveau",
+    "heroTitle": "Votre titre metier",
+    "heroLead": "Phrase d'accroche et promesse.",
+    "menuSectionTitle": "Catalogue",
+    "footerCopyright": "Nom du client"
+  }
+}

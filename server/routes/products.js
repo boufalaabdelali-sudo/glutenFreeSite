@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { Product, toPublicProduct } = require("../models/Product");
-const { requireAuth } = require("../middleware/authJwt");
+const { requireAuth, requireRole } = require("../middleware/authJwt");
 const { upload, filePathToUrl, deleteImageFileIfExists } = require("../utils/uploadProduct");
 
 const router = express.Router();
@@ -43,7 +43,12 @@ router.get("/", requireAuth, async (_req, res) => {
 });
 
 /** POST /api/products — creer (admin) */
-router.post("/", requireAuth, upload.single("image"), async (req, res) => {
+router.post(
+  "/",
+  requireAuth,
+  requireRole(["owner", "manager", "editor"]),
+  upload.single("image"),
+  async (req, res) => {
   try {
     const name = String(req.body?.name || "").trim();
     const description = String(req.body?.description || "").trim();
@@ -77,10 +82,16 @@ router.post("/", requireAuth, upload.single("image"), async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Creation du produit impossible." });
   }
-});
+  }
+);
 
 /** PATCH /api/products/:id — mettre a jour (admin) */
-router.patch("/:id", requireAuth, upload.single("image"), async (req, res) => {
+router.patch(
+  "/:id",
+  requireAuth,
+  requireRole(["owner", "manager", "editor"]),
+  upload.single("image"),
+  async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
@@ -116,10 +127,11 @@ router.patch("/:id", requireAuth, upload.single("image"), async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Mise a jour impossible." });
   }
-});
+  }
+);
 
 /** DELETE /api/products/:id — supprimer (admin) */
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", requireAuth, requireRole(["owner", "manager"]), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {

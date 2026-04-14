@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const { Order, toFrontendOrder } = require("../models/Order");
 const { Product } = require("../models/Product");
-const { requireAuth } = require("../middleware/authJwt");
+const { requireAuth, requireRole } = require("../middleware/authJwt");
 
 const router = express.Router();
 
@@ -109,7 +109,7 @@ router.get("/", requireAuth, async (_req, res) => {
 });
 
 /** DELETE /api/orders — toutes (admin) — avant /:id */
-router.delete("/", requireAuth, async (_req, res) => {
+router.delete("/", requireAuth, requireRole(["owner", "manager"]), async (_req, res) => {
   try {
     await Order.deleteMany({});
     res.status(204).send();
@@ -120,7 +120,11 @@ router.delete("/", requireAuth, async (_req, res) => {
 });
 
 /** PATCH /api/orders/:id — statut (admin) */
-router.patch("/:id", requireAuth, async (req, res) => {
+router.patch(
+  "/:id",
+  requireAuth,
+  requireRole(["owner", "manager", "editor"]),
+  async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -140,10 +144,11 @@ router.patch("/:id", requireAuth, async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Mise a jour impossible." });
   }
-});
+  }
+);
 
 /** DELETE /api/orders/:id — (admin) */
-router.delete("/:id", requireAuth, async (req, res) => {
+router.delete("/:id", requireAuth, requireRole(["owner", "manager"]), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {

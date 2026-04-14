@@ -1,0 +1,45 @@
+﻿{
+  "siteName": "Lueur de Cire",
+  "businessType": "retail",
+  "locale": "fr-FR",
+  "currency": "EUR",
+  "theme": {
+    "primary": "#7c3aed",
+    "primaryDark": "#5b21b6",
+    "heroGradient": "135deg, #4c1d95, #7c3aed",
+    "badgeBg": "rgba(255, 255, 255, 0.24)"
+  },
+  "images": {
+    "favicon": "/assets/branding/candles-favicon.ico",
+    "logo": "/assets/branding/candles-logo.png",
+    "heroBackground": "/assets/branding/candles-hero.jpg"
+  },
+  "contact": {
+    "whatsapp": "33698765432",
+    "email": "contact@lueurdecire.fr",
+    "stripePaymentLink": ""
+  },
+  "texts": {
+    "pageTitleSuffix": "Vente de bougies",
+    "metaDescription": "Bougies artisanales, senteurs uniques, commande en ligne.",
+    "navCtaCommand": "Commander",
+    "navCtaAdmin": "Espace admin",
+    "heroBadge": "Bougies artisanales",
+    "heroTitle": "Des bougies parfumées pour chaque ambiance",
+    "heroLead": "Collection premium, editions saisonnieres, livraison rapide.",
+    "menuSectionTitle": "Catalogue bougies",
+    "menuLoading": "Chargement du catalogue...",
+    "menuEmpty": "Aucun produit disponible actuellement.",
+    "orderSectionTitle": "Votre panier / commande",
+    "orderBlocked": "Ajoutez des produits depuis l'espace admin pour activer la vente.",
+    "fieldsetLegend": "Selection des produits",
+    "confirmButton": "Valider la commande",
+    "confirmSending": "Validation en cours...",
+    "footerCopyright": "Lueur de Cire",
+    "notesPlaceholder": "Parfum souhaite, message cadeau, remarques..."
+  },
+  "admin": {
+    "pageTitle": "Admin Lueur de Cire",
+    "headerTitle": "Administration"
+  }
+}

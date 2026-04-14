@@ -1,0 +1,45 @@
+﻿{
+  "siteName": "GlutenFree Maison",
+  "businessType": "restaurant",
+  "locale": "fr-FR",
+  "currency": "EUR",
+  "theme": {
+    "primary": "#16a34a",
+    "primaryDark": "#166534",
+    "heroGradient": "135deg, #14532d, #16a34a",
+    "badgeBg": "rgba(255, 255, 255, 0.22)"
+  },
+  "images": {
+    "favicon": "/assets/branding/glutenfree-favicon.ico",
+    "logo": "/assets/branding/glutenfree-logo.png",
+    "heroBackground": "/assets/branding/glutenfree-hero.jpg"
+  },
+  "contact": {
+    "whatsapp": "33612345678",
+    "email": "contact@glutenfree-maison.fr",
+    "stripePaymentLink": ""
+  },
+  "texts": {
+    "pageTitleSuffix": "Commande sans gluten",
+    "metaDescription": "Commande en ligne de plats 100% sans gluten.",
+    "navCtaCommand": "Commander",
+    "navCtaAdmin": "Espace admin",
+    "heroBadge": "100% Sans Gluten",
+    "heroTitle": "Vos plats sans gluten, frais et livrés",
+    "heroLead": "Menus du jour, livraison locale et prise de commande rapide.",
+    "menuSectionTitle": "Menu du jour",
+    "menuLoading": "Chargement du menu...",
+    "menuEmpty": "Aucun plat disponible pour le moment.",
+    "orderSectionTitle": "Passer une commande",
+    "orderBlocked": "Ajoutez des plats depuis l'espace admin pour activer les commandes.",
+    "fieldsetLegend": "Selection des plats",
+    "confirmButton": "Confirmer la commande",
+    "confirmSending": "Envoi en cours...",
+    "footerCopyright": "GlutenFree Maison",
+    "notesPlaceholder": "Allergenes, heures de livraison, remarques..."
+  },
+  "admin": {
+    "pageTitle": "Admin GlutenFree",
+    "headerTitle": "Administration"
+  }
+}

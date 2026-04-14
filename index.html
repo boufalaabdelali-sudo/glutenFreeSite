@@ -3,11 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sans Gluten Express - Commande en ligne</title>
-    <meta
-      name="description"
-      content="Commande de plats sans gluten, paiement en ligne et suivi des commandes."
-    />
+    <title>Commerce — Commande</title>
+    <meta id="br-meta-desc" name="description" content="" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,37 +14,35 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="hero">
+    <header id="br-hero" class="hero">
       <nav class="container nav">
-        <div class="logo">Sans Gluten Express</div>
+        <div class="logo logo--brand">
+          <img id="br-logo" class="nav-logo hidden" src="" alt="" width="120" height="40" />
+          <span id="br-site-name">Votre commerce</span>
+        </div>
         <div class="nav-actions">
-          <a class="btn btn-light" href="#commande">Commander</a>
-          <a class="btn btn-outline" href="./admin.html">Espace admin</a>
+          <a id="br-nav-command" class="btn btn-light" href="#commande">Commander</a>
+          <a id="br-nav-admin" class="btn btn-outline" href="./admin.html">Admin</a>
         </div>
       </nav>
       <section class="container hero-content">
-        <p class="badge">100% Sans Gluten</p>
-        <h1>Site de commande personnalisé pour vos plats sans gluten</h1>
-        <p class="lead">
-          Prise de commande rapide, validation WhatsApp/email, paiement en ligne
-          et suivi des commandes.
-        </p>
+        <p id="br-hero-badge" class="badge"> </p>
+        <h1 id="br-hero-title"> </h1>
+        <p id="br-hero-lead" class="lead"> </p>
       </section>
     </header>
 
     <main>
       <section id="menu" class="container section">
-        <h2>Menu du jour</h2>
-        <p id="menu-loading">Chargement du menu...</p>
-        <p id="menu-empty" class="hidden section-intro">Aucun plat disponible pour le moment.</p>
+        <h2 id="br-menu-title">Notre offre</h2>
+        <p id="menu-loading">Chargement...</p>
+        <p id="menu-empty" class="hidden section-intro"> </p>
         <div id="menu-grid" class="menu-grid"></div>
       </section>
 
       <section id="commande" class="container section">
-        <h2>Passer une commande</h2>
-        <p id="order-blocked" class="section-intro hidden">
-          Ajoutez des plats depuis l'espace admin pour pouvoir commander.
-        </p>
+        <h2 id="br-order-title">Commande</h2>
+        <p id="order-blocked" class="section-intro hidden"> </p>
         <form id="order-form" class="order-form hidden">
           <div class="grid">
             <label>
@@ -69,7 +64,7 @@
           </div>
 
           <fieldset>
-            <legend>Selection des plats</legend>
+            <legend id="br-fieldset-legend">Selection</legend>
             <div id="order-lines"></div>
           </fieldset>
 
@@ -88,13 +83,13 @@
           </div>
 
           <label>
-            Allergies ou consignes
-            <textarea name="notes" rows="3" placeholder="Ex: sans lactose"></textarea>
+            Remarques
+            <textarea id="br-notes" name="notes" rows="3" placeholder=""></textarea>
           </label>
 
           <div class="order-footer">
-            <p id="total" class="total">Total estime: 0,00 EUR</p>
-            <button class="btn btn-primary" type="submit" id="submit-order">Confirmer la commande</button>
+            <p id="total" class="total">Total: 0,00</p>
+            <button class="btn btn-primary" type="submit" id="submit-order">Valider</button>
           </div>
         </form>
 
@@ -104,7 +99,7 @@
 
     <footer class="footer">
       <div class="container">
-        <p>© 2026 Sans Gluten Express</p>
+        <p id="br-footer"> </p>
       </div>
     </footer>
 

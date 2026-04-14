@@ -8,7 +8,23 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "seed:admin": "node server/scripts/seedAdmin.js",
-    "seed:products": "node server/scripts/seedProducts.js"
+    "seed:products": "node server/scripts/seedProducts.js",
+    "seed:site-config": "node server/scripts/seedSiteConfig.js",
+    "seed:admin:glutenfree": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/glutenfree_store'; require('./server/scripts/seedAdmin.js');\"",
+    "seed:products:glutenfree": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/glutenfree_store'; require('./server/scripts/seedProducts.js');\"",
+    "seed:site-config:glutenfree": "node -e \"process.env.BRANDING_PATH='config/branding.glutenfree.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/glutenfree_store'; require('./server/scripts/seedSiteConfig.js');\"",
+    "seed:admin:candles": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/candles_store'; require('./server/scripts/seedAdmin.js');\"",
+    "seed:products:candles": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/candles_store'; require('./server/scripts/seedProducts.js');\"",
+    "seed:site-config:candles": "node -e \"process.env.BRANDING_PATH='config/branding.candles.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/candles_store'; require('./server/scripts/seedSiteConfig.js');\"",
+    "seed:admin:boulangerie": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/boulangerie_store'; require('./server/scripts/seedAdmin.js');\"",
+    "seed:products:boulangerie": "node -e \"process.env.MONGODB_URI='mongodb://127.0.0.1:27017/boulangerie_store'; require('./server/scripts/seedProducts.js');\"",
+    "seed:site-config:boulangerie": "node -e \"process.env.BRANDING_PATH='config/branding.boulangerie.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/boulangerie_store'; require('./server/scripts/seedSiteConfig.js');\"",
+    "init:glutenfree": "npm run seed:site-config:glutenfree && npm run seed:admin:glutenfree && npm run seed:products:glutenfree",
+    "init:candles": "npm run seed:site-config:candles && npm run seed:admin:candles && npm run seed:products:candles",
+    "init:boulangerie": "npm run seed:site-config:boulangerie && npm run seed:admin:boulangerie && npm run seed:products:boulangerie",
+    "start:glutenfree": "node -e \"process.env.BRANDING_PATH='config/branding.glutenfree.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/glutenfree_store'; require('./server/index.js');\"",
+    "start:candles": "node -e \"process.env.BRANDING_PATH='config/branding.candles.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/candles_store'; require('./server/index.js');\"",
+    "start:boulangerie": "node -e \"process.env.BRANDING_PATH='config/branding.boulangerie.json'; process.env.MONGODB_URI='mongodb://127.0.0.1:27017/boulangerie_store'; require('./server/index.js');\""
   },
   "engines": {
     "node": ">=18"

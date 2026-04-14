@@ -1,0 +1,45 @@
+{
+  "siteName": "Votre commerce",
+  "businessType": "restaurant",
+  "locale": "fr-FR",
+  "currency": "EUR",
+  "theme": {
+    "primary": "#16a34a",
+    "primaryDark": "#15803d",
+    "heroGradient": "135deg, #14532d, #16a34a",
+    "badgeBg": "rgba(255, 255, 255, 0.22)"
+  },
+  "images": {
+    "favicon": "",
+    "logo": "",
+    "heroBackground": ""
+  },
+  "contact": {
+    "whatsapp": "33600000000",
+    "email": "contact@exemple.fr",
+    "stripePaymentLink": ""
+  },
+  "texts": {
+    "pageTitleSuffix": "Commande en ligne",
+    "metaDescription": "Commandez en ligne — catalogue et livraison.",
+    "navCtaCommand": "Commander",
+    "navCtaAdmin": "Espace admin",
+    "heroBadge": "Votre accroche",
+    "heroTitle": "Une vitrine prête à personnaliser",
+    "heroLead": "Remplacez ces textes et images pour chaque client (restaurant, commerce, producteur).",
+    "menuSectionTitle": "Notre offre",
+    "menuLoading": "Chargement...",
+    "menuEmpty": "Aucun article pour le moment.",
+    "orderSectionTitle": "Votre commande",
+    "orderBlocked": "Ajoutez des articles depuis l'espace admin pour activer les commandes.",
+    "fieldsetLegend": "Votre selection",
+    "confirmButton": "Valider la commande",
+    "confirmSending": "Envoi en cours...",
+    "footerCopyright": "Votre commerce",
+    "notesPlaceholder": "Remarques (allergenes, horaires...)"
+  },
+  "admin": {
+    "pageTitle": "Administration",
+    "headerTitle": "Administration"
+  }
+}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin - Sans Gluten Express</title>
+    <title>Administration</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,7 +15,7 @@
   <body>
     <header class="hero">
       <nav class="container nav">
-        <div class="logo">Sans Gluten Express - Admin</div>
+        <div class="logo" id="br-admin-header">Administration</div>
         <div class="nav-actions">
           <a class="btn btn-light" href="./index.html">Voir le site</a>
           <button id="logout-btn" class="btn btn-outline hidden" type="button">Deconnexion</button>
@@ -49,7 +49,9 @@
       <section id="dashboard" class="hidden">
         <div class="admin-tabs">
           <button type="button" class="admin-tab admin-tab--active" data-tab="orders">Commandes</button>
-          <button type="button" class="admin-tab" data-tab="products">Plats et photos</button>
+          <button type="button" class="admin-tab" data-tab="products" id="tab-products">Catalogue</button>
+          <button type="button" class="admin-tab" data-tab="branding">Apparence & contenu</button>
+          <button type="button" class="admin-tab hidden" data-tab="users" id="tab-users">Utilisateurs admin</button>
         </div>
 
         <div id="pane-orders" class="admin-pane">
@@ -82,7 +84,7 @@
 
         <div id="pane-products" class="admin-pane hidden">
           <div class="admin-card">
-            <h2 id="product-form-title">Ajouter un plat</h2>
+            <h2 id="product-form-title">Ajouter un article</h2>
             <form id="product-form" class="product-form">
               <input type="hidden" id="product-editing-id" value="" />
               <div class="grid">
@@ -112,7 +114,7 @@
                 <input type="file" id="pf-image" accept="image/jpeg,image/png,image/webp,image/gif" />
               </label>
               <div class="admin-toolbar">
-                <button class="btn btn-primary" type="submit" id="pf-submit">Enregistrer le plat</button>
+                <button class="btn btn-primary" type="submit" id="pf-submit">Enregistrer</button>
                 <button class="btn btn-secondary hidden" type="button" id="pf-cancel-edit">Annuler la modification</button>
               </div>
             </form>
@@ -120,9 +122,9 @@
           </div>
 
           <div class="admin-card admin-card--table">
-            <h2>Plats en base</h2>
+            <h2 id="products-list-title">Catalogue</h2>
             <p id="products-loading">Chargement...</p>
-            <div id="products-empty" class="hidden">Aucun plat. Ajoutez-en ci-dessus.</div>
+            <div id="products-empty" class="hidden">Aucun article. Ajoutez-en ci-dessus.</div>
             <table id="products-table" class="hidden">
               <thead>
                 <tr>
@@ -136,6 +138,124 @@
               </thead>
               <tbody id="products-body"></tbody>
             </table>
+          </div>
+        </div>
+
+        <div id="pane-branding" class="admin-pane hidden">
+          <div class="admin-card">
+            <h2>Apparence & contenu</h2>
+            <form id="branding-form" class="product-form">
+              <div class="grid">
+                <label>Nom du site <input id="bc-siteName" type="text" required /></label>
+                <label>Type d'activité
+                  <select id="bc-businessType">
+                    <option value="restaurant">restaurant</option>
+                    <option value="retail">retail</option>
+                  </select>
+                </label>
+                <label>Locale <input id="bc-locale" type="text" placeholder="fr-FR" /></label>
+                <label>Devise <input id="bc-currency" type="text" placeholder="EUR" /></label>
+              </div>
+              <div class="grid">
+                <label>Couleur principale
+                  <div class="color-input-row">
+                    <input id="bc-primaryPicker" type="color" value="#16a34a" />
+                    <input id="bc-primary" type="text" placeholder="#16a34a" />
+                  </div>
+                </label>
+                <label>Couleur principale foncée
+                  <div class="color-input-row">
+                    <input id="bc-primaryDarkPicker" type="color" value="#15803d" />
+                    <input id="bc-primaryDark" type="text" placeholder="#15803d" />
+                  </div>
+                </label>
+                <label>Dégradé hero <input id="bc-heroGradient" type="text" placeholder="135deg, #1e293b, #334155" /></label>
+                <label>Badge background <input id="bc-badgeBg" type="text" placeholder="rgba(255, 255, 255, 0.2)" /></label>
+              </div>
+              <div class="grid">
+                <label>Email contact <input id="bc-email" type="email" /></label>
+                <label>WhatsApp <input id="bc-whatsapp" type="text" /></label>
+                <label>Lien Stripe <input id="bc-stripe" type="url" /></label>
+              </div>
+              <div class="grid">
+                <label>Logo URL <input id="bc-logoUrl" type="text" /></label>
+                <label>Favicon URL <input id="bc-faviconUrl" type="text" /></label>
+                <label>Hero image URL <input id="bc-heroBgUrl" type="text" /></label>
+              </div>
+              <div class="grid">
+                <div>
+                  <p class="section-intro">Aperçu logo</p>
+                  <img id="bc-logoPreview" class="branding-preview" alt="Aperçu logo" />
+                </div>
+                <div>
+                  <p class="section-intro">Aperçu favicon</p>
+                  <img id="bc-faviconPreview" class="branding-preview branding-preview--small" alt="Aperçu favicon" />
+                </div>
+                <div>
+                  <p class="section-intro">Aperçu hero</p>
+                  <img id="bc-heroPreview" class="branding-preview" alt="Aperçu hero" />
+                </div>
+              </div>
+              <div class="grid">
+                <label>Uploader image (retourne une URL)
+                  <input id="bc-upload-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+                </label>
+                <label>Cible image
+                  <select id="bc-upload-target">
+                    <option value="logo">logo</option>
+                    <option value="favicon">favicon</option>
+                    <option value="heroBackground">heroBackground</option>
+                  </select>
+                </label>
+                <label><span>&nbsp;</span><button id="bc-upload-btn" class="btn btn-secondary" type="button">Uploader</button></label>
+              </div>
+              <div class="grid">
+                <label>Libellé singulier article <input id="bc-itemSingular" type="text" /></label>
+                <label>Libellé pluriel articles <input id="bc-itemPlural" type="text" /></label>
+                <label>Titre catalogue <input id="bc-catalogTitle" type="text" /></label>
+                <label>Action ajouter <input id="bc-addItemAction" type="text" /></label>
+              </div>
+              <label>Titre hero <input id="bc-heroTitle" type="text" /></label>
+              <label>Sous-titre hero <textarea id="bc-heroLead" rows="2"></textarea></label>
+              <label>Description meta <textarea id="bc-metaDesc" rows="2"></textarea></label>
+              <div class="admin-toolbar">
+                <button class="btn btn-primary" type="submit">Enregistrer configuration</button>
+              </div>
+            </form>
+            <p id="branding-error" class="admin-error hidden"></p>
+          </div>
+        </div>
+
+        <div id="pane-users" class="admin-pane hidden">
+          <div class="admin-card">
+            <h2>Utilisateurs admin (owner uniquement)</h2>
+            <form id="admin-user-form" class="grid">
+              <label>Identifiant <input id="au-username" type="text" required /></label>
+              <label>Mot de passe <input id="au-password" type="password" required /></label>
+              <label>Rôle
+                <select id="au-role">
+                  <option value="owner">owner</option>
+                  <option value="manager">manager</option>
+                  <option value="editor">editor</option>
+                </select>
+              </label>
+              <div class="admin-toolbar">
+                <button class="btn btn-primary" type="submit">Créer utilisateur</button>
+              </div>
+            </form>
+            <p id="admin-users-error" class="admin-error hidden"></p>
+            <table id="admin-users-table" class="hidden">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Rôle</th>
+                  <th>Actif</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-body"></tbody>
+            </table>
+            <p id="admin-users-empty" class="hidden">Aucun utilisateur.</p>
           </div>
         </div>
       </section>

@@ -1,0 +1,54 @@
+{
+  "siteName": "Maison du Pain",
+  "businessType": "retail",
+  "locale": "fr-FR",
+  "currency": "EUR",
+  "theme": {
+    "primary": "#b45309",
+    "primaryDark": "#92400e",
+    "heroGradient": "135deg, #7c2d12, #b45309",
+    "badgeBg": "rgba(255, 255, 255, 0.24)"
+  },
+  "images": {
+    "favicon": "/assets/branding/boulangerie-favicon.ico",
+    "logo": "/assets/branding/boulangerie-logo.png",
+    "heroBackground": "/assets/branding/boulangerie-hero.jpg"
+  },
+  "contact": {
+    "whatsapp": "33611223344",
+    "email": "contact@maisondupain.fr",
+    "stripePaymentLink": ""
+  },
+  "texts": {
+    "pageTitleSuffix": "Commande boulangerie",
+    "metaDescription": "Pains artisanaux, viennoiseries et pâtisseries à commander en ligne.",
+    "navCtaCommand": "Commander",
+    "navCtaAdmin": "Espace admin",
+    "heroBadge": "Boulangerie artisanale",
+    "heroTitle": "Pain frais et douceurs du jour",
+    "heroLead": "Préparez vos commandes de pain, viennoiseries et pâtisseries en quelques clics.",
+    "menuSectionTitle": "Notre vitrine du jour",
+    "menuLoading": "Chargement des produits...",
+    "menuEmpty": "Aucun produit disponible pour le moment.",
+    "orderSectionTitle": "Passer votre commande",
+    "orderBlocked": "Ajoutez des produits depuis l'espace admin pour activer la vente.",
+    "fieldsetLegend": "Sélection des produits",
+    "confirmButton": "Valider la commande",
+    "confirmSending": "Envoi en cours...",
+    "footerCopyright": "Maison du Pain",
+    "notesPlaceholder": "Ex: pain tranché, heure de retrait, message..."
+  },
+  "labels": {
+    "itemSingular": "produit",
+    "itemPlural": "produits",
+    "catalogTitle": "Produits de boulangerie",
+    "addItemAction": "Ajouter un produit",
+    "editItemAction": "Modifier un produit",
+    "saveItemAction": "Enregistrer",
+    "selectItemsLegend": "Choix des produits"
+  },
+  "admin": {
+    "pageTitle": "Admin Boulangerie",
+    "headerTitle": "Administration"
+  }
+}
