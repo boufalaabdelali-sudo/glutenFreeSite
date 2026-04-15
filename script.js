@@ -1,4 +1,5 @@
 const API_BASE = "";
+const BRANDING_UPDATED_AT_KEY = "siteConfigUpdatedAt";
 
 /** Configuration affichage (API /api/branding) */
 let branding = null;
@@ -15,6 +16,22 @@ const menuLoading = document.getElementById("menu-loading");
 const menuEmpty = document.getElementById("menu-empty");
 const orderLines = document.getElementById("order-lines");
 const orderBlocked = document.getElementById("order-blocked");
+const productModal = document.getElementById("product-modal");
+const productModalBackdrop = document.getElementById("product-modal-backdrop");
+const productModalClose = document.getElementById("product-modal-close");
+const productModalImage = document.getElementById("product-modal-image");
+const productModalTitle = document.getElementById("product-modal-title");
+const productModalDesc = document.getElementById("product-modal-desc");
+const productModalPrice = document.getElementById("product-modal-price");
+const productModalQty = document.getElementById("product-modal-qty");
+const productModalAdd = document.getElementById("product-modal-add");
+const productModalFeedback = document.getElementById("product-modal-feedback");
+const trackForm = document.getElementById("track-form");
+const trackSubmit = document.getElementById("track-submit");
+const trackError = document.getElementById("track-error");
+const trackResults = document.getElementById("track-results");
+let currentModalProductId = "";
+let productFeedbackTimer = null;
 
 function getBrandingContact() {
   return branding?.contact || {};
@@ -51,19 +68,24 @@ function applyBrandingToDom(b) {
   if (theme.primary) root.style.setProperty("--primary", theme.primary);
   if (theme.primaryDark) root.style.setProperty("--primary-dark", theme.primaryDark);
   else if (theme.primary) root.style.setProperty("--primary-dark", theme.primary);
-  if (theme.heroGradient) {
+  if (theme.topBarColor) root.style.setProperty("--topbar-bg", theme.topBarColor);
+  // Priority: explicit heroColor from admin must win over heroGradient.
+  if (theme.heroColor) {
+    root.style.setProperty("--hero-bg", theme.heroColor);
+  } else if (theme.heroGradient) {
     root.style.setProperty("--hero-bg", `linear-gradient(${theme.heroGradient})`);
   }
   if (theme.badgeBg) {
     root.style.setProperty("--badge-bg", theme.badgeBg);
   }
 
+  // Keep hero color/gradient fully driven by theme variables.
+  // We do not force a gray overlay image on the hero background.
   const hero = document.getElementById("br-hero");
-  const heroBackgroundUrl = normalizeBrandingUrl(images.heroBackground);
-  if (hero && heroBackgroundUrl) {
-    hero.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.4)), url(${heroBackgroundUrl})`;
-    hero.style.backgroundSize = "cover";
-    hero.style.backgroundPosition = "center";
+  if (hero) {
+    hero.style.backgroundImage = "";
+    hero.style.backgroundSize = "";
+    hero.style.backgroundPosition = "";
   }
 
   const meta = document.getElementById("br-meta-desc");
@@ -81,6 +103,7 @@ function applyBrandingToDom(b) {
   }
 
   const logoEl = document.getElementById("br-logo");
+  const heroImgEl = document.getElementById("br-hero-image");
   const logoUrl = normalizeBrandingUrl(images.logo);
   if (logoEl && logoUrl) {
     logoEl.src = logoUrl;
@@ -88,6 +111,16 @@ function applyBrandingToDom(b) {
     logoEl.alt = b.siteName || "";
     logoEl.onerror = () => {
       logoEl.classList.add("hidden");
+    };
+  }
+
+  const heroVisualUrl = normalizeBrandingUrl(images.heroBackground || images.logo);
+  if (heroImgEl && heroVisualUrl) {
+    heroImgEl.src = heroVisualUrl;
+    heroImgEl.classList.remove("hidden");
+    heroImgEl.alt = `Visuel ${b.siteName || "site"}`;
+    heroImgEl.onerror = () => {
+      heroImgEl.classList.add("hidden");
     };
   }
 
@@ -123,7 +156,9 @@ function applyBrandingToDom(b) {
 
 async function loadBranding() {
   try {
-    const res = await fetch(`${API_BASE}/api/branding`);
+    const res = await fetch(`${API_BASE}/api/branding?t=${Date.now()}`, {
+      cache: "no-store",
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error();
     branding = data;
@@ -173,11 +208,60 @@ function buildOrderText(order) {
   ].join("\n");
 }
 
+function showTrackError(message) {
+  if (!trackError) return;
+  if (!message) {
+    trackError.classList.add("hidden");
+    trackError.textContent = "";
+    return;
+  }
+  trackError.classList.remove("hidden");
+  trackError.textContent = message;
+}
+
+function trackStatusLabel(status) {
+  const map = {
+    nouvelle: "Nouvelle",
+    confirmee: "Confirmee",
+    livree: "Livree",
+    annulee: "Annulee",
+  };
+  return map[status] || status || "-";
+}
+
+function renderTrackResults(orders) {
+  if (!trackResults) return;
+  trackResults.innerHTML = "";
+  if (!orders.length) {
+    trackResults.classList.remove("hidden");
+    trackResults.innerHTML = `<p class="section-intro">Aucune commande trouvee pour cet email.</p>`;
+    return;
+  }
+  orders.forEach((order) => {
+    const card = document.createElement("article");
+    card.className = "track-card";
+    const itemsText = (order.items || []).map((it) => `${escapeHtml(it.label)} x${it.qty}`).join(", ");
+    card.innerHTML = `
+      <h3>${escapeHtml(order.id)}</h3>
+      <p><strong>Statut :</strong> ${escapeHtml(trackStatusLabel(order.status))}</p>
+      <p><strong>Date :</strong> ${escapeHtml(new Date(order.createdAt).toLocaleString(branding?.locale || "fr-FR"))}</p>
+      <p><strong>Total :</strong> ${escapeHtml(formatMoney(Number(order.total) || 0))}</p>
+      <p><strong>Articles :</strong> ${itemsText || "-"}</p>
+    `;
+    trackResults.appendChild(card);
+  });
+  trackResults.classList.remove("hidden");
+}
+
 function renderMenu() {
   menuGrid.innerHTML = "";
   menuProducts.forEach((p) => {
     const article = document.createElement("article");
     article.className = "menu-item menu-item-card";
+    article.setAttribute("role", "button");
+    article.setAttribute("tabindex", "0");
+    article.setAttribute("aria-label", `Voir les détails de ${p.name}`);
+    article.dataset.productId = p._id;
     const imgHtml = p.imageUrl
       ? `<div class="menu-item-media"><img src="${escapeAttr(p.imageUrl)}" alt="" loading="lazy" /></div>`
       : `<div class="menu-item-media menu-item-media--empty" aria-hidden="true"></div>`;
@@ -191,6 +275,61 @@ function renderMenu() {
     `;
     menuGrid.appendChild(article);
   });
+}
+
+function openProductModal(product) {
+  if (!productModal) return;
+  currentModalProductId = product._id || "";
+  if (productFeedbackTimer) {
+    clearTimeout(productFeedbackTimer);
+    productFeedbackTimer = null;
+  }
+  productModalFeedback?.classList.add("hidden");
+  if (productModalQty) productModalQty.value = "1";
+  productModalTitle.textContent = product.name || "Produit";
+  productModalDesc.textContent = product.description || "Aucune description.";
+  productModalPrice.textContent = formatMoney(Number(product.price) || 0);
+  if (product.imageUrl) {
+    productModalImage.src = product.imageUrl;
+    productModalImage.classList.remove("hidden");
+  } else {
+    productModalImage.removeAttribute("src");
+    productModalImage.classList.add("hidden");
+  }
+  productModal.classList.remove("hidden");
+}
+
+function closeProductModal() {
+  if (!productModal) return;
+  currentModalProductId = "";
+  if (productFeedbackTimer) {
+    clearTimeout(productFeedbackTimer);
+    productFeedbackTimer = null;
+  }
+  productModalFeedback?.classList.add("hidden");
+  productModal.classList.add("hidden");
+}
+
+function addOneCurrentProductToCart() {
+  if (!currentModalProductId) return;
+  const requestedQty = Number(productModalQty?.value) || 1;
+  const safeQty = Math.min(20, Math.max(1, requestedQty));
+  if (productModalQty) productModalQty.value = String(safeQty);
+  const input = form?.querySelector(`input[name="qty-${CSS.escape(currentModalProductId)}"]`);
+  if (!(input instanceof HTMLInputElement)) return;
+  const currentQty = Number(input.value) || 0;
+  const maxQty = Number(input.max) || 20;
+  input.value = String(Math.min(currentQty + safeQty, maxQty));
+  calculateTotal();
+  if (productModalFeedback) {
+    productModalFeedback.textContent = safeQty > 1 ? `Ajouté au panier (+${safeQty})` : "Ajouté au panier";
+  }
+  productModalFeedback?.classList.remove("hidden");
+  if (productFeedbackTimer) clearTimeout(productFeedbackTimer);
+  productFeedbackTimer = setTimeout(() => {
+    productModalFeedback?.classList.add("hidden");
+    productFeedbackTimer = null;
+  }, 1200);
 }
 
 function renderOrderFields() {
@@ -263,6 +402,66 @@ async function initMenu() {
 }
 
 form.addEventListener("input", calculateTotal);
+
+menuGrid.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const card = target.closest(".menu-item-card");
+  if (!(card instanceof HTMLElement)) return;
+  const product = menuProducts.find((p) => p._id === card.dataset.productId);
+  if (!product) return;
+  openProductModal(product);
+});
+
+menuGrid.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target;
+  if (!(target instanceof HTMLElement) || !target.classList.contains("menu-item-card")) return;
+  event.preventDefault();
+  const product = menuProducts.find((p) => p._id === target.dataset.productId);
+  if (!product) return;
+  openProductModal(product);
+});
+
+productModalClose?.addEventListener("click", closeProductModal);
+productModalBackdrop?.addEventListener("click", closeProductModal);
+productModalAdd?.addEventListener("click", addOneCurrentProductToCart);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeProductModal();
+});
+
+trackForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  showTrackError("");
+  if (trackResults) {
+    trackResults.classList.add("hidden");
+    trackResults.innerHTML = "";
+  }
+  const data = new FormData(trackForm);
+  const email = String(data.get("email") || "").trim().toLowerCase();
+  if (!email) {
+    showTrackError("Veuillez saisir un email.");
+    return;
+  }
+  const previousLabel = trackSubmit?.textContent || "Rechercher mes commandes";
+  if (trackSubmit) {
+    trackSubmit.disabled = true;
+    trackSubmit.textContent = "Recherche...";
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/orders/track?email=${encodeURIComponent(email)}`);
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(payload.error || `Erreur ${res.status}`);
+    renderTrackResults(payload.orders || []);
+  } catch (err) {
+    showTrackError(err.message || "Recherche impossible.");
+  } finally {
+    if (trackSubmit) {
+      trackSubmit.disabled = false;
+      trackSubmit.textContent = previousLabel;
+    }
+  }
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -353,5 +552,10 @@ async function bootstrap() {
   await loadBranding();
   await initMenu();
 }
+
+window.addEventListener("storage", async (event) => {
+  if (event.key !== BRANDING_UPDATED_AT_KEY) return;
+  await loadBranding();
+});
 
 bootstrap();

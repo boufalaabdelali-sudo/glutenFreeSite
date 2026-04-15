@@ -9,9 +9,16 @@ const { upload, filePathToUrl } = require("../utils/uploadProduct");
 
 const router = express.Router();
 
+function setNoStore(res) {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+}
+
 /** GET /api/branding — public */
 router.get("/", async (_req, res) => {
   try {
+    setNoStore(res);
     const cfg = await getOrCreateSiteConfig();
     res.json(toPublicConfig(cfg));
   } catch (e) {
@@ -27,6 +34,7 @@ router.get(
   requireRole(["owner", "manager", "editor"]),
   async (_req, res) => {
   try {
+    setNoStore(res);
     const cfg = await getOrCreateSiteConfig();
     res.json({ config: toPublicConfig(cfg) });
   } catch (e) {
@@ -39,6 +47,7 @@ router.get(
 /** PUT /api/branding/admin — mise à jour partielle/fusion (admin) */
 router.put("/admin", requireAuth, requireRole(["owner", "manager"]), async (req, res) => {
   try {
+    setNoStore(res);
     const cfg = await updateSiteConfig(req.body || {});
     res.json({ config: toPublicConfig(cfg) });
   } catch (e) {

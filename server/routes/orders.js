@@ -108,6 +108,32 @@ router.get("/", requireAuth, async (_req, res) => {
   }
 });
 
+/** GET /api/orders/track?email=... — suivi client public */
+router.get("/track", async (req, res) => {
+  try {
+    const emailRaw = String(req.query?.email || "").trim().toLowerCase();
+    if (!emailRaw) {
+      return res.status(400).json({ error: "Email requis." });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailRaw)) {
+      return res.status(400).json({ error: "Email invalide." });
+    }
+
+    const escapedEmail = emailRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const docs = await Order.find({
+      "customer.email": { $regex: `^${escapedEmail}$`, $options: "i" },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+    const orders = docs.map((d) => toFrontendOrder(d));
+    return res.json({ orders });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Impossible de charger le suivi de commande." });
+  }
+});
+
 /** DELETE /api/orders — toutes (admin) — avant /:id */
 router.delete("/", requireAuth, requireRole(["owner", "manager"]), async (_req, res) => {
   try {

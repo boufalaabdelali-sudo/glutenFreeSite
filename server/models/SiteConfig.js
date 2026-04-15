@@ -10,6 +10,8 @@ const siteConfigSchema = new mongoose.Schema(
       primary: { type: String, default: "#16a34a" },
       primaryDark: { type: String, default: "#15803d" },
       heroGradient: { type: String, default: "135deg, #1e293b, #334155" },
+      heroColor: { type: String, default: "#1e293b" },
+      topBarColor: { type: String, default: "#0f172a" },
       badgeBg: { type: String, default: "rgba(255, 255, 255, 0.2)" },
     },
     images: {

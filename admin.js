@@ -1,5 +1,6 @@
 const API_BASE = "";
 const TOKEN_KEY = "sg_jwt_token";
+const BRANDING_UPDATED_AT_KEY = "siteConfigUpdatedAt";
 
 const loginSection = document.getElementById("login-section");
 const loginForm = document.getElementById("login-form");
@@ -42,6 +43,11 @@ const bcPrimary = document.getElementById("bc-primary");
 const bcPrimaryDark = document.getElementById("bc-primaryDark");
 const bcPrimaryPicker = document.getElementById("bc-primaryPicker");
 const bcPrimaryDarkPicker = document.getElementById("bc-primaryDarkPicker");
+const bcHeroColor = document.getElementById("bc-heroColor");
+const bcTopBarColor = document.getElementById("bc-topBarColor");
+const bcHeroColorPicker = document.getElementById("bc-heroColorPicker");
+const bcTopBarColorPicker = document.getElementById("bc-topBarColorPicker");
+const bcLinkHeaderColors = document.getElementById("bc-linkHeaderColors");
 const bcLogoUrl = document.getElementById("bc-logoUrl");
 const bcFaviconUrl = document.getElementById("bc-faviconUrl");
 const bcHeroBgUrl = document.getElementById("bc-heroBgUrl");
@@ -89,6 +95,15 @@ function toMoney(value) {
   const locale = siteConfig?.locale || "fr-FR";
   const currency = siteConfig?.currency || "EUR";
   return Number(value).toLocaleString(locale, { style: "currency", currency });
+}
+
+function getNextSortOrder() {
+  if (!productsCache.length) return 1;
+  const maxSort = productsCache.reduce((acc, p) => {
+    const value = Number(p.sortOrder) || 0;
+    return value > acc ? value : acc;
+  }, 0);
+  return maxSort + 1;
 }
 function showMsg(node, msg) {
   if (!node) return;
@@ -139,6 +154,11 @@ function refreshBrandingPreviews() {
 function collectBrandingPatch() {
   const primary = toHexColor(bcPrimary.value.trim(), "#16a34a");
   const primaryDark = toHexColor(bcPrimaryDark.value.trim(), primary);
+  let heroColor = toHexColor(bcHeroColor.value.trim(), "#1e293b");
+  const topBarColor = toHexColor(bcTopBarColor.value.trim(), "#0f172a");
+  if (bcLinkHeaderColors?.checked) {
+    heroColor = topBarColor;
+  }
   const logo = normalizeBrandingUrl(bcLogoUrl.value);
   const favicon = normalizeBrandingUrl(bcFaviconUrl.value);
   const heroBg = normalizeBrandingUrl(bcHeroBgUrl.value);
@@ -152,7 +172,11 @@ function collectBrandingPatch() {
       theme: {
         primary,
         primaryDark,
-        heroGradient: document.getElementById("bc-heroGradient").value.trim(),
+        heroColor,
+        topBarColor,
+        heroGradient: bcLinkHeaderColors?.checked
+          ? ""
+          : document.getElementById("bc-heroGradient").value.trim(),
         badgeBg: document.getElementById("bc-badgeBg").value.trim(),
       },
       contact: {
@@ -179,11 +203,13 @@ function collectBrandingPatch() {
     },
     primary,
     primaryDark,
+    heroColor,
+    topBarColor,
   };
 }
 
 async function saveBrandingConfig(showSuccess = true) {
-  const { patch, primary, primaryDark } = collectBrandingPatch();
+  const { patch, primary, primaryDark, heroColor, topBarColor } = collectBrandingPatch();
   const data = await api("/api/branding/admin", {
     method: "PUT",
     headers: authHeaders(true),
@@ -194,9 +220,15 @@ async function saveBrandingConfig(showSuccess = true) {
   bcPrimaryDark.value = primaryDark;
   bcPrimaryPicker.value = primary;
   bcPrimaryDarkPicker.value = primaryDark;
+  bcHeroColor.value = heroColor;
+  bcTopBarColor.value = topBarColor;
+  bcHeroColorPicker.value = heroColor;
+  bcTopBarColorPicker.value = topBarColor;
   applyAdminHeader();
   applyDynamicLabels();
   refreshBrandingPreviews();
+  // Notify other tabs (e.g. homepage) to refresh branding instantly.
+  localStorage.setItem(BRANDING_UPDATED_AT_KEY, String(Date.now()));
   if (showSuccess) showMsg(brandingError, "Configuration enregistrée.");
 }
 
@@ -263,6 +295,10 @@ function fillBrandingForm(cfg) {
   bcPrimaryDark.value = cfg.theme?.primaryDark || "";
   bcPrimaryPicker.value = toHexColor(bcPrimary.value || "#16a34a", "#16a34a");
   bcPrimaryDarkPicker.value = toHexColor(bcPrimaryDark.value || "#15803d", "#15803d");
+  bcHeroColor.value = cfg.theme?.heroColor || "";
+  bcTopBarColor.value = cfg.theme?.topBarColor || "";
+  bcHeroColorPicker.value = toHexColor(bcHeroColor.value || "#1e293b", "#1e293b");
+  bcTopBarColorPicker.value = toHexColor(bcTopBarColor.value || "#0f172a", "#0f172a");
   document.getElementById("bc-heroGradient").value = cfg.theme?.heroGradient || "";
   document.getElementById("bc-badgeBg").value = cfg.theme?.badgeBg || "";
   document.getElementById("bc-email").value = cfg.contact?.email || "";
@@ -278,6 +314,7 @@ function fillBrandingForm(cfg) {
   document.getElementById("bc-heroTitle").value = cfg.texts?.heroTitle || "";
   document.getElementById("bc-heroLead").value = cfg.texts?.heroLead || "";
   document.getElementById("bc-metaDesc").value = cfg.texts?.metaDescription || "";
+  bcLinkHeaderColors.checked = true;
   refreshBrandingPreviews();
 }
 
@@ -407,7 +444,7 @@ function resetProductForm() {
   pfName.value = "";
   pfDesc.value = "";
   pfPrice.value = "";
-  pfSort.value = "0";
+  pfSort.value = String(getNextSortOrder());
   pfActive.checked = true;
   pfImage.value = "";
   showMsg(productError, "");
@@ -538,7 +575,9 @@ bcUploadBtn.addEventListener("click", async () => {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
     const target = bcUploadTarget.value;
-    if (target === "logo") bcLogoUrl.value = data.imageUrl;
+    if (target === "logo") {
+      bcLogoUrl.value = data.imageUrl;
+    }
     if (target === "favicon") bcFaviconUrl.value = data.imageUrl;
     if (target === "heroBackground") bcHeroBgUrl.value = data.imageUrl;
     refreshBrandingPreviews();
@@ -560,6 +599,26 @@ bcPrimary.addEventListener("input", () => {
 });
 bcPrimaryDark.addEventListener("input", () => {
   bcPrimaryDarkPicker.value = toHexColor(bcPrimaryDark.value, bcPrimaryDarkPicker.value);
+});
+bcHeroColorPicker.addEventListener("input", () => {
+  bcHeroColor.value = bcHeroColorPicker.value;
+});
+bcTopBarColorPicker.addEventListener("input", () => {
+  bcTopBarColor.value = bcTopBarColorPicker.value;
+  if (bcLinkHeaderColors?.checked) {
+    bcHeroColor.value = bcTopBarColor.value;
+    bcHeroColorPicker.value = bcTopBarColorPicker.value;
+  }
+});
+bcHeroColor.addEventListener("input", () => {
+  bcHeroColorPicker.value = toHexColor(bcHeroColor.value, bcHeroColorPicker.value);
+});
+bcTopBarColor.addEventListener("input", () => {
+  bcTopBarColorPicker.value = toHexColor(bcTopBarColor.value, bcTopBarColorPicker.value);
+  if (bcLinkHeaderColors?.checked) {
+    bcHeroColor.value = bcTopBarColor.value;
+    bcHeroColorPicker.value = toHexColor(bcTopBarColor.value, bcHeroColorPicker.value);
+  }
 });
 bcLogoUrl.addEventListener("input", refreshBrandingPreviews);
 bcFaviconUrl.addEventListener("input", refreshBrandingPreviews);

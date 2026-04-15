@@ -29,6 +29,7 @@
         <p id="br-hero-badge" class="badge"> </p>
         <h1 id="br-hero-title"> </h1>
         <p id="br-hero-lead" class="lead"> </p>
+        <img id="br-hero-image" class="hero-visual hidden" src="" alt="" />
       </section>
     </header>
 
@@ -95,6 +96,24 @@
 
         <div id="confirmation" class="confirmation hidden" aria-live="polite"></div>
       </section>
+
+      <section id="suivi" class="container section">
+        <h2>Suivi de commande</h2>
+        <p class="section-intro">Entrez votre email pour voir l'etat de vos commandes.</p>
+        <form id="track-form" class="order-form">
+          <div class="grid">
+            <label>
+              Email
+              <input type="email" name="email" required placeholder="votre@email.com" />
+            </label>
+          </div>
+          <div class="order-footer">
+            <button class="btn btn-primary" type="submit" id="track-submit">Rechercher mes commandes</button>
+          </div>
+        </form>
+        <div id="track-error" class="admin-error hidden" aria-live="polite"></div>
+        <div id="track-results" class="track-results hidden"></div>
+      </section>
     </main>
 
     <footer class="footer">
@@ -102,6 +121,25 @@
         <p id="br-footer"> </p>
       </div>
     </footer>
+
+    <div id="product-modal" class="product-modal hidden" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <div id="product-modal-backdrop" class="product-modal-backdrop"></div>
+      <div class="product-modal-content">
+        <button id="product-modal-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <img id="product-modal-image" class="product-modal-image hidden" alt="" />
+        <h3 id="product-modal-title"></h3>
+        <p id="product-modal-desc" class="product-modal-desc"></p>
+        <p id="product-modal-price" class="product-modal-price"></p>
+        <label class="product-modal-qty">
+          Quantité souhaitée
+          <input id="product-modal-qty" type="number" min="1" max="20" step="1" value="1" />
+        </label>
+        <div class="product-modal-actions">
+          <span id="product-modal-feedback" class="product-modal-feedback hidden" aria-live="polite">Ajouté au panier</span>
+          <button id="product-modal-add" class="btn btn-primary" type="button">Ajouter au panier</button>
+        </div>
+      </div>
+    </div>
 
     <script src="./script.js"></script>
   </body>
