@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authRouter = require("./routes/auth");
+const customerAuthRouter = require("./routes/customerAuth");
 const brandingRouter = require("./routes/branding");
 const adminUsersRouter = require("./routes/adminUsers");
 const productsRouter = require("./routes/products");
@@ -20,6 +21,7 @@ app.use(express.json({ limit: "64kb" }));
 ensureUploadDir();
 
 app.use("/api/auth", authRouter);
+app.use("/api/customer-auth", customerAuthRouter);
 app.use("/api/branding", brandingRouter);
 app.use("/api/admin-users", adminUsersRouter);
 app.use("/api/products", productsRouter);

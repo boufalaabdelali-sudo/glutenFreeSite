@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const { Order, toFrontendOrder } = require("../models/Order");
 const { Product } = require("../models/Product");
-const { requireAuth, requireRole } = require("../middleware/authJwt");
+const { requireAuth: requireAdminAuth, requireRole } = require("../middleware/authJwt");
+const { requireCustomerAuth } = require("../middleware/authCustomerJwt");
 
 const router = express.Router();
 
@@ -45,15 +46,14 @@ async function normalizeItemsFromBody(rawItems) {
   return { items, total };
 }
 
-/** POST /api/orders — creation (public) */
-router.post("/", async (req, res) => {
+/** POST /api/orders — creation (client connecté) */
+router.post("/", requireCustomerAuth, async (req, res) => {
   try {
     const { customer, items: rawItems, paymentMethod, deliveryDate, notes } = req.body;
 
     if (
       !customer?.name ||
       !customer?.phone ||
-      !customer?.email ||
       !customer?.address
     ) {
       return res.status(400).json({ error: "Coordonnees client incompletes." });
@@ -72,10 +72,11 @@ router.post("/", async (req, res) => {
 
     const order = await Order.create({
       orderCode: generateOrderCode(),
+      customerUserId: req.customer.sub,
       customer: {
         name: String(customer.name).trim(),
         phone: String(customer.phone).trim(),
-        email: String(customer.email).trim(),
+        email: String(req.customer.email || customer.email || "").trim().toLowerCase(),
         address: String(customer.address).trim(),
       },
       items: normalized.items,
@@ -97,7 +98,7 @@ router.post("/", async (req, res) => {
 });
 
 /** GET /api/orders — liste (admin JWT) */
-router.get("/", requireAuth, async (_req, res) => {
+router.get("/", requireAdminAuth, async (_req, res) => {
   try {
     const docs = await Order.find().sort({ createdAt: -1 }).lean();
     const orders = docs.map((d) => toFrontendOrder(d));
@@ -108,34 +109,20 @@ router.get("/", requireAuth, async (_req, res) => {
   }
 });
 
-/** GET /api/orders/track?email=... — suivi client public */
-router.get("/track", async (req, res) => {
+/** GET /api/orders/my — suivi client connecté */
+router.get("/my", requireCustomerAuth, async (req, res) => {
   try {
-    const emailRaw = String(req.query?.email || "").trim().toLowerCase();
-    if (!emailRaw) {
-      return res.status(400).json({ error: "Email requis." });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailRaw)) {
-      return res.status(400).json({ error: "Email invalide." });
-    }
-
-    const escapedEmail = emailRaw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const docs = await Order.find({
-      "customer.email": { $regex: `^${escapedEmail}$`, $options: "i" },
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    const docs = await Order.find({ customerUserId: req.customer.sub }).sort({ createdAt: -1 }).lean();
     const orders = docs.map((d) => toFrontendOrder(d));
     return res.json({ orders });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Impossible de charger le suivi de commande." });
+    return res.status(500).json({ error: "Impossible de charger vos commandes." });
   }
 });
 
 /** DELETE /api/orders — toutes (admin) — avant /:id */
-router.delete("/", requireAuth, requireRole(["owner", "manager"]), async (_req, res) => {
+router.delete("/", requireAdminAuth, requireRole(["owner", "manager"]), async (_req, res) => {
   try {
     await Order.deleteMany({});
     res.status(204).send();
@@ -148,7 +135,7 @@ router.delete("/", requireAuth, requireRole(["owner", "manager"]), async (_req, 
 /** PATCH /api/orders/:id — statut (admin) */
 router.patch(
   "/:id",
-  requireAuth,
+  requireAdminAuth,
   requireRole(["owner", "manager", "editor"]),
   async (req, res) => {
   try {
@@ -174,7 +161,7 @@ router.patch(
 );
 
 /** DELETE /api/orders/:id — (admin) */
-router.delete("/:id", requireAuth, requireRole(["owner", "manager"]), async (req, res) => {
+router.delete("/:id", requireAdminAuth, requireRole(["owner", "manager"]), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {

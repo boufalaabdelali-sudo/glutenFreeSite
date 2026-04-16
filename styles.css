@@ -36,6 +36,17 @@ body {
   margin-top: 0.4rem;
 }
 .nav-actions { display: flex; gap: 0.6rem; }
+.nav-customer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.6rem;
+}
+.nav-customer-icon {
+  font-size: 1rem;
+}
 .logo { font-weight: 800; }
 .logo--brand {
   display: flex;
@@ -351,6 +362,30 @@ th { background: #f1f5f9; }
   display: grid;
   place-items: center;
 }
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  animation: modalFadeIn 180ms ease-out;
+}
+.auth-modal.hidden {
+  display: none;
+}
+.auth-modal-content {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 92%);
+  background: #fff;
+  border-radius: 0.9rem;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  animation: modalSlideIn 200ms ease-out;
+}
+.auth-modal-panel {
+  margin-top: 0.8rem;
+}
 .product-modal.hidden {
   display: none;
 }
@@ -437,4 +472,40 @@ th { background: #f1f5f9; }
 }
 .track-card p {
   margin: 0.2rem 0;
+}
+
+.auth-switch {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+  padding: 0.3rem;
+  background: #f1f5f9;
+  border-radius: 0.8rem;
+}
+.auth-switch .btn {
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+.auth-switch .btn:hover {
+  transform: translateY(-1px);
+}
+.auth-switch .btn.auth-switch-active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

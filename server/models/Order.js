@@ -28,6 +28,7 @@ const customerSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     orderCode: { type: String, required: true, unique: true, index: true },
+    customerUserId: { type: mongoose.Schema.Types.ObjectId, ref: "CustomerUser", index: true },
     customer: { type: customerSchema, required: true },
     items: { type: [itemSchema], required: true },
     total: { type: Number, required: true, min: 0 },
@@ -66,6 +67,7 @@ function toFrontendOrder(doc) {
   return {
     id: o.orderCode,
     _id: String(o._id),
+    customerUserId: o.customerUserId ? String(o.customerUserId) : "",
     createdAt,
     status: o.status,
     customer: o.customer,

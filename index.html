@@ -22,7 +22,13 @@
         </div>
         <div class="nav-actions">
           <a id="br-nav-command" class="btn btn-light" href="#commande">Commander</a>
-          <a id="br-nav-admin" class="btn btn-outline" href="./admin.html">Admin</a>
+          <button id="nav-login-btn" class="btn btn-outline" type="button">Se connecter</button>
+          <button id="nav-register-btn" class="btn btn-outline" type="button">S'inscrire</button>
+          <div id="nav-customer-session" class="nav-customer hidden">
+            <span class="nav-customer-icon" aria-hidden="true">👤</span>
+            <span id="nav-customer-email"></span>
+            <button id="nav-logout-btn" class="btn btn-light" type="button">Se déconnecter</button>
+          </div>
         </div>
       </nav>
       <section class="container hero-content">
@@ -44,6 +50,7 @@
       <section id="commande" class="container section">
         <h2 id="br-order-title">Commande</h2>
         <p id="order-blocked" class="section-intro hidden"> </p>
+        <p id="customer-required" class="admin-error hidden">Connectez-vous avec votre compte client pour passer commande.</p>
         <form id="order-form" class="order-form hidden">
           <div class="grid">
             <label>
@@ -53,10 +60,6 @@
             <label>
               Telephone
               <input type="tel" name="phone" placeholder="+33 6 00 00 00 00" required />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" required />
             </label>
             <label>
               Adresse de livraison
@@ -97,22 +100,20 @@
         <div id="confirmation" class="confirmation hidden" aria-live="polite"></div>
       </section>
 
-      <section id="suivi" class="container section">
-        <h2>Suivi de commande</h2>
-        <p class="section-intro">Entrez votre email pour voir l'etat de vos commandes.</p>
-        <form id="track-form" class="order-form">
+      <section id="mes-commandes" class="container section">
+        <h2>Mes commandes</h2>
+        <p class="section-intro">Vos commandes liées à votre compte client.</p>
+        <form id="my-orders-form" class="order-form hidden">
           <div class="grid">
-            <label>
-              Email
-              <input type="email" name="email" required placeholder="votre@email.com" />
-            </label>
+            <p class="section-intro">Cliquez pour rafraîchir votre suivi de commandes.</p>
           </div>
           <div class="order-footer">
-            <button class="btn btn-primary" type="submit" id="track-submit">Rechercher mes commandes</button>
+            <button class="btn btn-primary" type="submit" id="my-orders-submit">Voir mes commandes</button>
           </div>
         </form>
-        <div id="track-error" class="admin-error hidden" aria-live="polite"></div>
-        <div id="track-results" class="track-results hidden"></div>
+        <p id="my-orders-locked" class="section-intro">Connectez-vous pour afficher vos commandes.</p>
+        <div id="my-orders-error" class="admin-error hidden" aria-live="polite"></div>
+        <div id="my-orders-results" class="track-results hidden"></div>
       </section>
     </main>
 
@@ -121,6 +122,53 @@
         <p id="br-footer"> </p>
       </div>
     </footer>
+
+    <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <div id="auth-modal-backdrop" class="product-modal-backdrop"></div>
+      <div class="auth-modal-content">
+        <button id="auth-modal-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <h2 id="auth-modal-title">Compte client</h2>
+        <div id="customer-auth-panels" class="order-form auth-modal-panel">
+          <div class="auth-switch">
+            <button id="switch-login" class="btn btn-secondary" type="button">Se connecter</button>
+            <button id="switch-register" class="btn btn-secondary" type="button">S'inscrire</button>
+          </div>
+          <form id="customer-login-form">
+            <div class="grid">
+              <label>
+                Email
+                <input type="email" name="email" required placeholder="vous@email.com" />
+              </label>
+              <label>
+                Mot de passe
+                <input type="password" name="password" required placeholder="Votre mot de passe" />
+              </label>
+            </div>
+            <div class="order-footer">
+              <button class="btn btn-primary" type="submit" id="customer-login-submit">Se connecter</button>
+            </div>
+          </form>
+          <form id="customer-register-form" class="hidden">
+            <div class="grid">
+              <label>
+                Email
+                <input type="email" name="email" required placeholder="vous@email.com" />
+              </label>
+              <label>
+                Mot de passe
+                <input type="password" name="password" required minlength="8" placeholder="8 caractères minimum" />
+              </label>
+            </div>
+            <div class="order-footer">
+              <button class="btn btn-primary" type="submit" id="customer-register-submit">Créer mon compte</button>
+            </div>
+          </form>
+          <div id="customer-auth-error" class="admin-error hidden" aria-live="polite"></div>
+        </div>
+        <div id="customer-session" class="hidden"></div>
+        <button class="btn btn-secondary hidden" type="button" id="customer-logout-btn">Se déconnecter</button>
+      </div>
+    </div>
 
     <div id="product-modal" class="product-modal hidden" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
       <div id="product-modal-backdrop" class="product-modal-backdrop"></div>
