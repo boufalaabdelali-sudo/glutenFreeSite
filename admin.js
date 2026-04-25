@@ -1,6 +1,7 @@
 const API_BASE = "";
 const TOKEN_KEY = "sg_jwt_token";
 const BRANDING_UPDATED_AT_KEY = "siteConfigUpdatedAt";
+const FETCH_TIMEOUT_MS = 18000;
 
 const loginSection = document.getElementById("login-section");
 const loginForm = document.getElementById("login-form");
@@ -26,6 +27,7 @@ const productFormTitle = document.getElementById("product-form-title");
 const productsListTitle = document.getElementById("products-list-title");
 const pfName = document.getElementById("pf-name");
 const pfPrice = document.getElementById("pf-price");
+const pfCategory = document.getElementById("pf-category");
 const pfSort = document.getElementById("pf-sort");
 const pfActive = document.getElementById("pf-active");
 const pfDesc = document.getElementById("pf-desc");
@@ -33,6 +35,11 @@ const pfImage = document.getElementById("pf-image");
 const pfSubmit = document.getElementById("pf-submit");
 const pfCancelEdit = document.getElementById("pf-cancel-edit");
 const productEditingId = document.getElementById("product-editing-id");
+const catName = document.getElementById("cat-name");
+const catSort = document.getElementById("cat-sort");
+const catAddBtn = document.getElementById("cat-add-btn");
+const catError = document.getElementById("cat-error");
+const catList = document.getElementById("cat-list");
 
 const brandingForm = document.getElementById("branding-form");
 const brandingError = document.getElementById("branding-error");
@@ -64,6 +71,7 @@ const adminUserForm = document.getElementById("admin-user-form");
 
 let ordersCache = [];
 let productsCache = [];
+let categoriesCache = [];
 let currentUser = null;
 let siteConfig = null;
 
@@ -104,6 +112,18 @@ function getNextSortOrder() {
     return value > acc ? value : acc;
   }, 0);
   return maxSort + 1;
+}
+
+function refreshCategorySelect(selected = "Général") {
+  if (!pfCategory) return;
+  const categories = categoriesCache.map((c) => c.name);
+  const current = selected && String(selected).trim() ? String(selected).trim() : "Général";
+  if (!categories.includes(current)) categories.push(current);
+  categories.sort((a, b) => a.localeCompare(b, "fr"));
+  pfCategory.innerHTML = categories
+    .map((cat) => `<option value="${escapeAttr(cat)}">${escapeHtml(cat)}</option>`)
+    .join("");
+  pfCategory.value = current;
 }
 function showMsg(node, msg) {
   if (!node) return;
@@ -244,16 +264,95 @@ function showDashboard() {
   logoutBtn.classList.remove("hidden");
 }
 
-async function api(url, options = {}) {
-  const res = await fetch(`${API_BASE}${url}`, options);
-  const data = await res.json().catch(() => ({}));
-  if (res.status === 401) {
-    setToken("");
-    showLogin("Session expirée. Reconnectez-vous.");
-    throw new Error("401");
+function explainFetchFailure(err) {
+  if (err?.name === "AbortError") return "Délai dépassé. Réessayez.";
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return "Pas de connexion Internet.";
   }
-  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
-  return data;
+  return "Impossible de joindre le serveur. Vérifiez votre connexion.";
+}
+
+async function api(url, options = {}) {
+  const path = `${API_BASE}${url}`;
+  const method = String(options.method || "GET").toUpperCase();
+  const maxAttempts = method === "GET" ? 2 : 1;
+
+  async function once() {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(path, { ...options, signal: controller.signal });
+      const data = await res.json().catch(() => ({}));
+      return { res, data };
+    } finally {
+      clearTimeout(tid);
+    }
+  }
+
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      let { res, data } = await once();
+      if (method === "GET" && !res.ok && res.status >= 502 && res.status <= 504 && attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, 450));
+        continue;
+      }
+      if (res.status === 401) {
+        setToken("");
+        showLogin("Session expirée. Reconnectez-vous.");
+        throw new Error("401");
+      }
+      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      return data;
+    } catch (err) {
+      lastErr = err;
+      if (err.message === "401") throw err;
+      const networkOrTimeout = err.name === "TypeError" || err.name === "AbortError";
+      if (method === "GET" && networkOrTimeout && attempt < maxAttempts - 1) {
+        await new Promise((r) => setTimeout(r, 450));
+        continue;
+      }
+      break;
+    }
+  }
+
+  if (lastErr && lastErr.message === "401") throw lastErr;
+  if (lastErr && lastErr.name === "AbortError") throw new Error("Délai dépassé. Réessayez.");
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    throw new Error("Pas de connexion Internet.");
+  }
+  if (lastErr && (lastErr.name === "TypeError" || lastErr.name === "AbortError")) {
+    throw new Error(explainFetchFailure(lastErr));
+  }
+  if (lastErr instanceof Error) throw lastErr;
+  throw new Error(explainFetchFailure(lastErr));
+}
+
+/** Upload / FormData : timeout + erreurs alignées sur api(), sans forcer Content-Type JSON. */
+async function fetchMultipart(path, options = {}) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { ...options, signal: controller.signal });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      setToken("");
+      showLogin("Session expirée. Reconnectez-vous.");
+      throw new Error("401");
+    }
+    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+    return data;
+  } catch (err) {
+    if (err.message === "401") throw err;
+    if (err.name === "AbortError") throw new Error("Délai dépassé. Réessayez.");
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      throw new Error("Pas de connexion Internet.");
+    }
+    if (err instanceof Error && err.message) throw err;
+    throw new Error(explainFetchFailure(err));
+  } finally {
+    clearTimeout(tid);
+  }
 }
 
 function activeLabels() {
@@ -384,22 +483,22 @@ ordersBody.addEventListener("click", async (e) => {
   const t = e.target;
   if (!(t instanceof HTMLButtonElement) || t.dataset.action !== "delete") return;
   try {
-    await fetch(`${API_BASE}/api/orders/${t.dataset.id}`, {
+    await api(`/api/orders/${t.dataset.id}`, {
       method: "DELETE",
       headers: authHeaders(),
     });
     await loadOrders();
-  } catch {
-    showMsg(ordersError, "Suppression impossible.");
+  } catch (err) {
+    showMsg(ordersError, err.message || "Suppression impossible.");
   }
 });
 clearBtn.addEventListener("click", async () => {
   if (!confirm("Supprimer toutes les commandes ?")) return;
   try {
-    await fetch(`${API_BASE}/api/orders`, { method: "DELETE", headers: authHeaders() });
+    await api("/api/orders", { method: "DELETE", headers: authHeaders() });
     await loadOrders();
-  } catch {
-    showMsg(ordersError, "Suppression globale impossible.");
+  } catch (err) {
+    showMsg(ordersError, err.message || "Suppression globale impossible.");
   }
 });
 refreshBtn.addEventListener("click", () => loadOrders());
@@ -444,12 +543,41 @@ function resetProductForm() {
   pfName.value = "";
   pfDesc.value = "";
   pfPrice.value = "";
+  refreshCategorySelect("Général");
   pfSort.value = String(getNextSortOrder());
   pfActive.checked = true;
   pfImage.value = "";
   showMsg(productError, "");
 }
 pfCancelEdit.addEventListener("click", resetProductForm);
+
+function renderCategories() {
+  if (!catList) return;
+  if (!categoriesCache.length) {
+    catList.innerHTML = `<span class="section-intro">Aucune catégorie.</span>`;
+    return;
+  }
+  catList.innerHTML = categoriesCache
+    .map((c, idx) => `<span class="chip">
+        ${escapeHtml(c.name)}
+        <input type="number" class="chip-order" data-order-cat="${escapeAttr(c._id)}" value="${Number(c.sortOrder) || 0}" step="1" />
+        <button type="button" class="chip-move" data-move-cat="${escapeAttr(c._id)}" data-dir="up" ${idx === 0 ? "disabled" : ""} aria-label="Monter ${escapeAttr(c.name)}">↑</button>
+        <button type="button" class="chip-move" data-move-cat="${escapeAttr(c._id)}" data-dir="down" ${idx === categoriesCache.length - 1 ? "disabled" : ""} aria-label="Descendre ${escapeAttr(c.name)}">↓</button>
+        <button type="button" class="chip-del" data-del-cat="${escapeAttr(c._id)}" aria-label="Supprimer ${escapeAttr(c.name)}">×</button>
+      </span>`)
+    .join("");
+}
+
+async function loadCategories() {
+  try {
+    const data = await api("/api/categories", { headers: authHeaders() });
+    categoriesCache = data.categories || [];
+    refreshCategorySelect(pfCategory?.value || "Général");
+    renderCategories();
+  } catch (err) {
+    if (err.message !== "401") showMsg(catError, err.message);
+  }
+}
 
 async function loadProducts() {
   productsLoading.classList.remove("hidden");
@@ -474,6 +602,7 @@ async function loadProducts() {
       tr.innerHTML = `
         <td>${thumb}</td>
         <td>${escapeHtml(p.name)}</td>
+        <td>${escapeHtml(p.category || "Général")}</td>
         <td>${toMoney(p.price)}</td>
         <td>${p.active ? "Oui" : "Non"}</td>
         <td>${p.sortOrder}</td>
@@ -506,6 +635,7 @@ productsBody.addEventListener("click", async (e) => {
     pfName.value = row.name;
     pfDesc.value = row.description || "";
     pfPrice.value = String(row.price);
+    refreshCategorySelect(row.category || "Général");
     pfSort.value = String(row.sortOrder ?? 0);
     pfActive.checked = !!row.active;
     pfImage.value = "";
@@ -514,13 +644,13 @@ productsBody.addEventListener("click", async (e) => {
   if (delId) {
     if (!confirm("Supprimer cet élément ?")) return;
     try {
-      await fetch(`${API_BASE}/api/products/${delId}`, {
+      await api(`/api/products/${delId}`, {
         method: "DELETE",
         headers: authHeaders(),
       });
       await loadProducts();
-    } catch {
-      showMsg(productError, "Suppression impossible.");
+    } catch (err) {
+      showMsg(productError, err.message || "Suppression impossible.");
     }
   }
 });
@@ -529,24 +659,111 @@ productForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const edit = productEditingId.value.trim();
   const fd = new FormData();
+  const selectedCategory = String(pfCategory?.value || "").trim();
   fd.append("name", pfName.value.trim());
+  fd.append("category", selectedCategory || "Général");
   fd.append("description", pfDesc.value.trim());
   fd.append("price", pfPrice.value);
   fd.append("sortOrder", pfSort.value || "0");
   fd.append("active", pfActive.checked ? "true" : "false");
   if (pfImage.files && pfImage.files[0]) fd.append("image", pfImage.files[0]);
   try {
-    const res = await fetch(`${API_BASE}/api/products${edit ? `/${edit}` : ""}`, {
+    await fetchMultipart(`/api/products${edit ? `/${edit}` : ""}`, {
       method: edit ? "PATCH" : "POST",
       headers: { Accept: "application/json", Authorization: `Bearer ${getToken()}` },
       body: fd,
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
     resetProductForm();
     await loadProducts();
   } catch (err) {
     showMsg(productError, err.message);
+  }
+});
+
+catAddBtn?.addEventListener("click", async () => {
+  const name = String(catName?.value || "").trim();
+  const sortOrder = Number(catSort?.value || 0);
+  if (!name) {
+    showMsg(catError, "Nom de catégorie requis.");
+    return;
+  }
+  showMsg(catError, "");
+  try {
+    await api("/api/categories", {
+      method: "POST",
+      headers: authHeaders(true),
+      body: JSON.stringify({ name, sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0 }),
+    });
+    catName.value = "";
+    if (catSort) catSort.value = "0";
+    await loadCategories();
+  } catch (err) {
+    showMsg(catError, err.message);
+  }
+});
+
+catList?.addEventListener("change", async (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLInputElement)) return;
+  const id = t.getAttribute("data-order-cat");
+  if (!id) return;
+  const sortOrder = Number(t.value || 0);
+  showMsg(catError, "");
+  try {
+    await api(`/api/categories/${id}`, {
+      method: "PATCH",
+      headers: authHeaders(true),
+      body: JSON.stringify({ sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0 }),
+    });
+    await loadCategories();
+  } catch (err) {
+    showMsg(catError, err.message);
+  }
+});
+
+catList?.addEventListener("click", async (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLButtonElement)) return;
+  const moveId = t.getAttribute("data-move-cat");
+  const moveDir = t.getAttribute("data-dir");
+  if (moveId && (moveDir === "up" || moveDir === "down")) {
+    const i = categoriesCache.findIndex((c) => c._id === moveId);
+    if (i < 0) return;
+    const j = moveDir === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= categoriesCache.length) return;
+    const a = categoriesCache[i];
+    const b = categoriesCache[j];
+    showMsg(catError, "");
+    try {
+      await api(`/api/categories/${a._id}`, {
+        method: "PATCH",
+        headers: authHeaders(true),
+        body: JSON.stringify({ sortOrder: Number(b.sortOrder) || 0 }),
+      });
+      await api(`/api/categories/${b._id}`, {
+        method: "PATCH",
+        headers: authHeaders(true),
+        body: JSON.stringify({ sortOrder: Number(a.sortOrder) || 0 }),
+      });
+      await loadCategories();
+    } catch (err) {
+      showMsg(catError, err.message);
+    }
+    return;
+  }
+  const id = t.getAttribute("data-del-cat");
+  if (!id) return;
+  if (!confirm("Supprimer cette catégorie ?")) return;
+  showMsg(catError, "");
+  try {
+    await api(`/api/categories/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    await loadCategories();
+    await loadProducts();
+  } catch (err) {
+    showMsg(catError, err.message);
   }
 });
 
@@ -567,13 +784,11 @@ bcUploadBtn.addEventListener("click", async () => {
   try {
     const fd = new FormData();
     fd.append("image", bcUploadFile.files[0]);
-    const res = await fetch(`${API_BASE}/api/branding/upload`, {
+    const data = await fetchMultipart("/api/branding/upload", {
       method: "POST",
       headers: { Authorization: `Bearer ${getToken()}` },
       body: fd,
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
     const target = bcUploadTarget.value;
     if (target === "logo") {
       bcLogoUrl.value = data.imageUrl;
@@ -726,7 +941,10 @@ document.querySelectorAll(".admin-tab").forEach((btn) => {
       if (pane) pane.classList.toggle("hidden", name !== tab);
     });
     if (tab === "orders") await loadOrders();
-    if (tab === "products") await loadProducts();
+    if (tab === "products") {
+      await loadCategories();
+      await loadProducts();
+    }
     if (tab === "branding") await loadConfigAdmin();
     if (tab === "users") await loadAdminUsers();
   });
@@ -748,6 +966,7 @@ loginForm.addEventListener("submit", async (e) => {
     showUsersPaneIfOwner();
     showDashboard();
     await loadConfigAdmin();
+    await loadCategories();
     await loadOrders();
   } catch (err) {
     showMsg(loginError, err.message === "401" ? "Identifiants invalides." : err.message);
@@ -762,7 +981,7 @@ logoutBtn.addEventListener("click", () => {
 
 async function boot() {
   try {
-    const branding = await fetch(`${API_BASE}/api/branding`).then((r) => r.json());
+    const branding = await api("/api/branding");
     siteConfig = branding;
     applyAdminHeader();
     applyDynamicLabels();
@@ -779,10 +998,12 @@ async function boot() {
     showUsersPaneIfOwner();
     showDashboard();
     await loadConfigAdmin();
+    await loadCategories();
     await loadOrders();
   } catch {
     showLogin("Session invalide.");
   }
 }
 
+syncOfflineBanner();
 boot();

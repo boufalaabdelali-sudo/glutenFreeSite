@@ -1,12 +1,14 @@
 require("dotenv").config();
 const path = require("path");
 const express = require("express");
+const compression = require("compression");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authRouter = require("./routes/auth");
 const customerAuthRouter = require("./routes/customerAuth");
 const brandingRouter = require("./routes/branding");
 const adminUsersRouter = require("./routes/adminUsers");
+const categoriesRouter = require("./routes/categories");
 const productsRouter = require("./routes/products");
 const ordersRouter = require("./routes/orders");
 const { ensureUploadDir } = require("./utils/uploadProduct");
@@ -15,6 +17,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/sans_gluten_express";
 
 const app = express();
+app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: "64kb" }));
 
@@ -24,6 +27,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/customer-auth", customerAuthRouter);
 app.use("/api/branding", brandingRouter);
 app.use("/api/admin-users", adminUsersRouter);
+app.use("/api/categories", categoriesRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 

@@ -32,11 +32,11 @@
     "menuEmpty": "Aucun article pour le moment.",
     "orderSectionTitle": "Votre commande",
     "orderBlocked": "Ajoutez des articles depuis l'espace admin pour activer les commandes.",
-    "fieldsetLegend": "Votre selection",
+    "fieldsetLegend": "Votre sélection",
     "confirmButton": "Valider la commande",
     "confirmSending": "Envoi en cours...",
     "footerCopyright": "Votre commerce",
-    "notesPlaceholder": "Remarques (allergenes, horaires...)"
+    "notesPlaceholder": "Remarques (allergènes, horaires...)"
   },
   "admin": {
     "pageTitle": "Administration",

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="offline-banner" class="offline-banner hidden" role="status">Pas de connexion Internet.</div>
     <header id="br-hero" class="hero">
       <nav class="container nav">
         <div class="logo logo--brand">
@@ -21,9 +22,11 @@
           <span id="br-site-name">Votre commerce</span>
         </div>
         <div class="nav-actions">
-          <a id="br-nav-command" class="btn btn-light" href="#commande">Commander</a>
+          <a id="br-nav-command" class="btn btn-light hidden" href="#commande">Commander</a>
+          <span id="nav-cart-badge" class="nav-cart-badge hidden" aria-live="polite">Panier: 0 article</span>
           <button id="nav-login-btn" class="btn btn-outline" type="button">Se connecter</button>
           <button id="nav-register-btn" class="btn btn-outline" type="button">S'inscrire</button>
+          <button id="nav-profile-btn" class="btn btn-outline hidden" type="button">Mon profil</button>
           <div id="nav-customer-session" class="nav-customer hidden">
             <span class="nav-customer-icon" aria-hidden="true">👤</span>
             <span id="nav-customer-email"></span>
@@ -40,81 +43,25 @@
     </header>
 
     <main>
+      <section id="customer-actions" class="container section hidden">
+        <div class="customer-actions-grid">
+          <button id="open-order-flow-btn" class="btn btn-primary" type="button">Commander</button>
+          <button id="open-track-flow-btn" class="btn btn-secondary" type="button">Suivi de commande</button>
+        </div>
+      </section>
+
       <section id="menu" class="container section">
         <h2 id="br-menu-title">Notre offre</h2>
         <p id="menu-loading">Chargement...</p>
         <p id="menu-empty" class="hidden section-intro"> </p>
+        <div id="menu-category-tabs" class="menu-category-tabs hidden" role="tablist" aria-label="Catégories produits"></div>
         <div id="menu-grid" class="menu-grid"></div>
+        <div id="login-cta-banner" class="login-cta-banner hidden">
+          <p>Connectez-vous pour passer commande et suivre vos commandes.</p>
+          <button id="login-cta-btn" class="btn btn-primary" type="button">Se connecter</button>
+        </div>
       </section>
 
-      <section id="commande" class="container section">
-        <h2 id="br-order-title">Commande</h2>
-        <p id="order-blocked" class="section-intro hidden"> </p>
-        <p id="customer-required" class="admin-error hidden">Connectez-vous avec votre compte client pour passer commande.</p>
-        <form id="order-form" class="order-form hidden">
-          <div class="grid">
-            <label>
-              Nom complet
-              <input type="text" name="name" required />
-            </label>
-            <label>
-              Telephone
-              <input type="tel" name="phone" placeholder="+33 6 00 00 00 00" required />
-            </label>
-            <label>
-              Adresse de livraison
-              <input type="text" name="address" required />
-            </label>
-          </div>
-
-          <fieldset>
-            <legend id="br-fieldset-legend">Selection</legend>
-            <div id="order-lines"></div>
-          </fieldset>
-
-          <div class="grid">
-            <label>
-              Mode de paiement
-              <select name="paymentMethod" required>
-                <option value="livraison">Paiement a la livraison</option>
-                <option value="enligne">Paiement en ligne</option>
-              </select>
-            </label>
-            <label>
-              Date souhaitee
-              <input type="date" name="deliveryDate" required />
-            </label>
-          </div>
-
-          <label>
-            Remarques
-            <textarea id="br-notes" name="notes" rows="3" placeholder=""></textarea>
-          </label>
-
-          <div class="order-footer">
-            <p id="total" class="total">Total: 0,00</p>
-            <button class="btn btn-primary" type="submit" id="submit-order">Valider</button>
-          </div>
-        </form>
-
-        <div id="confirmation" class="confirmation hidden" aria-live="polite"></div>
-      </section>
-
-      <section id="mes-commandes" class="container section">
-        <h2>Mes commandes</h2>
-        <p class="section-intro">Vos commandes liées à votre compte client.</p>
-        <form id="my-orders-form" class="order-form hidden">
-          <div class="grid">
-            <p class="section-intro">Cliquez pour rafraîchir votre suivi de commandes.</p>
-          </div>
-          <div class="order-footer">
-            <button class="btn btn-primary" type="submit" id="my-orders-submit">Voir mes commandes</button>
-          </div>
-        </form>
-        <p id="my-orders-locked" class="section-intro">Connectez-vous pour afficher vos commandes.</p>
-        <div id="my-orders-error" class="admin-error hidden" aria-live="polite"></div>
-        <div id="my-orders-results" class="track-results hidden"></div>
-      </section>
     </main>
 
     <footer class="footer">
@@ -122,6 +69,37 @@
         <p id="br-footer"> </p>
       </div>
     </footer>
+
+    <div id="profile-modal" class="auth-modal profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+      <div id="profile-modal-backdrop" class="product-modal-backdrop"></div>
+      <div class="auth-modal-content">
+        <button id="profile-modal-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <h2 id="profile-modal-title">Mon profil</h2>
+        <p class="section-intro profile-modal-intro">
+          Ces informations sont utilisées pour vos commandes (livraison et contact).
+        </p>
+        <form id="profile-form" class="order-form auth-modal-panel">
+          <div class="grid">
+            <label>
+              Nom complet
+              <input type="text" name="fullName" required autocomplete="name" />
+            </label>
+            <label>
+              Téléphone
+              <input type="tel" name="phone" required autocomplete="tel" placeholder="+33 6 00 00 00 00" />
+            </label>
+            <label>
+              Adresse de livraison
+              <input type="text" name="address" required autocomplete="street-address" />
+            </label>
+          </div>
+          <div class="order-footer">
+            <button class="btn btn-primary" type="submit" id="profile-submit">Enregistrer</button>
+          </div>
+          <p id="profile-message" class="hidden" role="status"></p>
+        </form>
+      </div>
+    </div>
 
     <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div id="auth-modal-backdrop" class="product-modal-backdrop"></div>
@@ -152,11 +130,23 @@
             <div class="grid">
               <label>
                 Email
-                <input type="email" name="email" required placeholder="vous@email.com" />
+                <input type="email" name="email" required placeholder="vous@email.com" autocomplete="email" />
               </label>
               <label>
                 Mot de passe
-                <input type="password" name="password" required minlength="8" placeholder="8 caractères minimum" />
+                <input type="password" name="password" required minlength="8" placeholder="8 caractères minimum" autocomplete="new-password" />
+              </label>
+              <label>
+                Nom complet
+                <input type="text" name="fullName" required autocomplete="name" />
+              </label>
+              <label>
+                Téléphone
+                <input type="tel" name="phone" required autocomplete="tel" placeholder="+33 6 00 00 00 00" />
+              </label>
+              <label>
+                Adresse de livraison
+                <input type="text" name="address" required autocomplete="street-address" />
               </label>
             </div>
             <div class="order-footer">
@@ -170,6 +160,76 @@
       </div>
     </div>
 
+    <div id="order-flow-modal" class="auth-modal flow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="br-order-title">
+      <div id="order-flow-backdrop" class="product-modal-backdrop"></div>
+      <div class="auth-modal-content">
+        <button id="order-flow-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <h2 id="br-order-title">Commande</h2>
+        <p id="order-blocked" class="section-intro hidden"> </p>
+        <p id="customer-required" class="admin-error hidden">Connectez-vous avec votre compte client pour passer commande.</p>
+        <p id="order-profile-hint" class="section-intro hidden">
+          Nom, téléphone et adresse de livraison sont ceux enregistrés dans <strong>Mon profil</strong> (modifiables à tout moment).
+        </p>
+        <form id="order-form" class="order-form hidden">
+          <fieldset>
+            <legend id="br-fieldset-legend">Sélection</legend>
+            <div id="order-lines"></div>
+          </fieldset>
+
+          <div class="grid">
+            <label>
+              Mode de paiement
+              <select name="paymentMethod" required>
+                <option value="livraison">Paiement à la livraison</option>
+                <option value="enligne">Paiement en ligne</option>
+              </select>
+            </label>
+            <label>
+              Date souhaitée
+              <input type="date" name="deliveryDate" required />
+            </label>
+          </div>
+
+          <label>
+            Remarques
+            <textarea id="br-notes" name="notes" rows="3" placeholder=""></textarea>
+          </label>
+
+          <div class="order-footer">
+            <p id="total" class="total">Total: 0,00</p>
+            <button class="btn btn-primary" type="submit" id="submit-order">Valider</button>
+          </div>
+        </form>
+
+        <div id="confirmation" class="confirmation hidden" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div id="track-flow-modal" class="auth-modal flow-modal hidden" role="dialog" aria-modal="true" aria-labelledby="track-flow-title">
+      <div id="track-flow-backdrop" class="product-modal-backdrop"></div>
+      <div class="auth-modal-content">
+        <button id="track-flow-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <h2 id="track-flow-title">Mes commandes</h2>
+        <p class="section-intro">Vos commandes liées à votre compte client.</p>
+        <p id="my-orders-locked" class="section-intro">Connectez-vous pour afficher vos commandes.</p>
+        <div id="my-orders-error" class="admin-error hidden" aria-live="polite"></div>
+        <div id="my-orders-results" class="track-results hidden"></div>
+      </div>
+    </div>
+
+    <div id="order-detail-modal" class="product-modal order-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="order-detail-title">
+      <div id="order-detail-backdrop" class="product-modal-backdrop"></div>
+      <div class="product-modal-content order-detail-content">
+        <button id="order-detail-close" class="product-modal-close" type="button" aria-label="Fermer">×</button>
+        <h3 id="order-detail-title">Commande</h3>
+        <div id="order-detail-body" class="order-detail-body"></div>
+        <div class="order-detail-actions">
+          <button type="button" id="order-detail-cancel" class="btn btn-secondary hidden">Annuler cette commande</button>
+        </div>
+        <p id="order-detail-error" class="admin-error hidden" role="alert"></p>
+      </div>
+    </div>
+
     <div id="product-modal" class="product-modal hidden" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
       <div id="product-modal-backdrop" class="product-modal-backdrop"></div>
       <div class="product-modal-content">
@@ -178,13 +238,29 @@
         <h3 id="product-modal-title"></h3>
         <p id="product-modal-desc" class="product-modal-desc"></p>
         <p id="product-modal-price" class="product-modal-price"></p>
-        <label class="product-modal-qty">
-          Quantité souhaitée
-          <input id="product-modal-qty" type="number" min="1" max="20" step="1" value="1" />
-        </label>
+        <div class="product-modal-qty-block">
+          <span class="product-modal-qty-heading">Quantité souhaitée</span>
+          <div class="qty-stepper" role="group" aria-label="Quantité">
+            <button type="button" id="product-modal-qty-dec" class="menu-item-qty-step" aria-label="Diminuer la quantité">
+              −
+            </button>
+            <input
+              id="product-modal-qty"
+              class="menu-item-qty-input qty-stepper-input"
+              type="number"
+              min="1"
+              max="20"
+              step="1"
+              value="1"
+            />
+            <button type="button" id="product-modal-qty-inc" class="menu-item-qty-step" aria-label="Augmenter la quantité">
+              +
+            </button>
+          </div>
+        </div>
         <div class="product-modal-actions">
+          <button id="product-modal-add" class="btn btn-primary product-modal-add-btn" type="button">Ajouter au panier</button>
           <span id="product-modal-feedback" class="product-modal-feedback hidden" aria-live="polite">Ajouté au panier</span>
-          <button id="product-modal-add" class="btn btn-primary" type="button">Ajouter au panier</button>
         </div>
       </div>
     </div>

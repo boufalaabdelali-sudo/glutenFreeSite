@@ -1,4 +1,4 @@
-﻿{
+{
   "siteName": "GlutenFree Maison",
   "businessType": "restaurant",
   "locale": "fr-FR",
@@ -10,7 +10,7 @@
     "badgeBg": "rgba(255, 255, 255, 0.22)"
   },
   "images": {
-    "favicon": "/assets/branding/glutenfree-favicon.ico",
+    "favicon": "",
     "logo": "/assets/branding/glutenfree-logo.png",
     "heroBackground": "/assets/branding/glutenfree-hero.jpg"
   },
@@ -32,7 +32,7 @@
     "menuEmpty": "Aucun plat disponible pour le moment.",
     "orderSectionTitle": "Passer une commande",
     "orderBlocked": "Ajoutez des plats depuis l'espace admin pour activer les commandes.",
-    "fieldsetLegend": "Selection des plats",
+    "fieldsetLegend": "Sélection des plats",
     "confirmButton": "Confirmer la commande",
     "confirmSending": "Envoi en cours...",
     "footerCopyright": "GlutenFree Maison",

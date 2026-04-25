@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    category: { type: String, default: "Général", trim: true },
     description: { type: String, default: "", trim: true },
     price: { type: Number, required: true, min: 0 },
     /** Chemin URL servi en statique, ex: /uploads/products/abc.jpg */
@@ -18,6 +19,7 @@ function toPublicProduct(doc) {
   return {
     _id: String(o._id),
     name: o.name,
+    category: o.category || "Général",
     description: o.description || "",
     price: o.price,
     imageUrl: o.imagePath ? o.imagePath : "",

@@ -7,6 +7,61 @@ const { requireCustomerAuth } = require("../middleware/authCustomerJwt");
 
 const router = express.Router();
 
+function customerObjectId(rawSub) {
+  try {
+    return new mongoose.Types.ObjectId(String(rawSub));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Cherche une commande appartenant au client (Mongo _id ou code CMD-...).
+ * @param {{ lean?: boolean }} opts — lean true pour lecture seule (GET), false pour annulation (.save()).
+ */
+async function findOrderOwnedByCustomer(orderRef, customerSub, opts = {}) {
+  const lean = opts.lean === true;
+  const cid = customerObjectId(customerSub);
+  if (!cid) return null;
+  const ref = typeof orderRef === "string" ? orderRef.trim() : "";
+  if (!ref) return null;
+  let filter = null;
+  if (mongoose.isValidObjectId(ref)) {
+    filter = { _id: ref, customerUserId: cid };
+  } else if (/^CMD-/i.test(ref)) {
+    filter = { orderCode: ref, customerUserId: cid };
+  }
+  if (!filter) return null;
+  const q = Order.findOne(filter);
+  return lean ? q.lean() : q.exec();
+}
+
+async function handleCustomerCancel(req, res) {
+  try {
+    const orderRef = req.body?.orderId ?? req.body?.id ?? req.params?.orderId;
+    const order = await findOrderOwnedByCustomer(orderRef, req.customer.sub, { lean: false });
+    if (!order) {
+      return res.status(404).json({ error: "Commande introuvable." });
+    }
+    if (order.status !== "nouvelle") {
+      const errors = {
+        confirmee: "Une commande confirmée ne peut plus être annulée depuis votre compte.",
+        livree: "Une commande livrée ne peut pas être annulée.",
+        annulee: "Cette commande est déjà annulée.",
+      };
+      return res.status(400).json({
+        error: errors[order.status] || "Cette commande ne peut plus être annulée.",
+      });
+    }
+    order.status = "annulee";
+    await order.save();
+    return res.json({ order: toFrontendOrder(order) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Annulation impossible pour le moment." });
+  }
+}
+
 function generateOrderCode() {
   return `CMD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
@@ -25,12 +80,12 @@ async function normalizeItemsFromBody(rawItems) {
       return { error: "Identifiant produit invalide." };
     }
     if (!Number.isFinite(qty) || qty < 1 || qty > 20) {
-      return { error: "Quantite invalide." };
+      return { error: "Quantité invalide." };
     }
 
     const product = await Product.findById(productId).lean();
     if (!product || !product.active) {
-      return { error: "Un produit n'est plus disponible. Rafraichissez la page." };
+      return { error: "Un produit n'est plus disponible. Rafraîchissez la page." };
     }
 
     const unitPrice = product.price;
@@ -112,7 +167,11 @@ router.get("/", requireAdminAuth, async (_req, res) => {
 /** GET /api/orders/my — suivi client connecté */
 router.get("/my", requireCustomerAuth, async (req, res) => {
   try {
-    const docs = await Order.find({ customerUserId: req.customer.sub }).sort({ createdAt: -1 }).lean();
+    const cid = customerObjectId(req.customer.sub);
+    if (!cid) {
+      return res.status(401).json({ error: "Session client invalide." });
+    }
+    const docs = await Order.find({ customerUserId: cid }).sort({ createdAt: -1 }).lean();
     const orders = docs.map((d) => toFrontendOrder(d));
     return res.json({ orders });
   } catch (err) {
@@ -120,6 +179,27 @@ router.get("/my", requireCustomerAuth, async (req, res) => {
     return res.status(500).json({ error: "Impossible de charger vos commandes." });
   }
 });
+
+/** POST /api/orders/my/annuler — annulation (corps JSON : { orderId } ou code CMD-...) */
+router.post("/my/annuler", requireCustomerAuth, handleCustomerCancel);
+
+/** GET /api/orders/my/:orderId — détail (propriétaire uniquement) */
+router.get("/my/:orderId", requireCustomerAuth, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const doc = await findOrderOwnedByCustomer(orderId, req.customer.sub, { lean: true });
+    if (!doc) {
+      return res.status(404).json({ error: "Commande introuvable." });
+    }
+    return res.json({ order: toFrontendOrder(doc) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Impossible de charger la commande." });
+  }
+});
+
+/** POST /api/orders/my/:orderId/annuler — même annulation (chemin alternatif) */
+router.post("/my/:orderId/annuler", requireCustomerAuth, handleCustomerCancel);
 
 /** DELETE /api/orders — toutes (admin) — avant /:id */
 router.delete("/", requireAdminAuth, requireRole(["owner", "manager"]), async (_req, res) => {
@@ -155,7 +235,7 @@ router.patch(
     res.json({ order: toFrontendOrder(order) });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Mise a jour impossible." });
+    res.status(500).json({ error: "Mise à jour impossible." });
   }
   }
 );

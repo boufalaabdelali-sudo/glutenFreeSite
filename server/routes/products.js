@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { Product, toPublicProduct } = require("../models/Product");
+const { Category } = require("../models/Category");
 const { requireAuth, requireRole } = require("../middleware/authJwt");
 const { upload, filePathToUrl, deleteImageFileIfExists } = require("../utils/uploadProduct");
 
@@ -18,6 +19,17 @@ function parseBool(v, defaultVal = true) {
 function parseNumber(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function parseCategory(v, fallback = "Général") {
+  const raw = String(v ?? "").trim();
+  return raw || fallback;
+}
+
+async function ensureExistingCategory(name) {
+  const categoryName = parseCategory(name, "Général");
+  const exists = await Category.findOne({ name: categoryName }).lean();
+  return exists ? categoryName : "";
 }
 
 /** GET /api/products/menu — vitrine (actifs uniquement) */
@@ -51,6 +63,7 @@ router.post(
   async (req, res) => {
   try {
     const name = String(req.body?.name || "").trim();
+    const category = await ensureExistingCategory(req.body?.category);
     const description = String(req.body?.description || "").trim();
     const price = parseNumber(req.body?.price, NaN);
     const active = parseBool(req.body?.active, true);
@@ -62,6 +75,9 @@ router.post(
     if (!Number.isFinite(price) || price < 0) {
       return res.status(400).json({ error: "Prix invalide." });
     }
+    if (!category) {
+      return res.status(400).json({ error: "Catégorie invalide." });
+    }
 
     let imagePath = "";
     if (req.file) {
@@ -70,6 +86,7 @@ router.post(
 
     const product = await Product.create({
       name,
+      category,
       description,
       price,
       imagePath,
@@ -104,6 +121,13 @@ router.patch(
     }
 
     if (req.body.name != null) product.name = String(req.body.name).trim();
+    if (req.body.category != null) {
+      const category = await ensureExistingCategory(req.body.category);
+      if (!category) {
+        return res.status(400).json({ error: "Catégorie invalide." });
+      }
+      product.category = category;
+    }
     if (req.body.description != null) product.description = String(req.body.description).trim();
     if (req.body.price != null) {
       const price = parseNumber(req.body.price, NaN);

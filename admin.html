@@ -13,12 +13,13 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="offline-banner" class="offline-banner hidden" role="status">Pas de connexion Internet.</div>
     <header class="hero">
       <nav class="container nav">
         <div class="logo" id="br-admin-header">Administration</div>
         <div class="nav-actions">
           <a class="btn btn-light" href="./index.html">Voir le site</a>
-          <button id="logout-btn" class="btn btn-outline hidden" type="button">Deconnexion</button>
+          <button id="logout-btn" class="btn btn-outline hidden" type="button">Déconnexion</button>
         </div>
       </nav>
     </header>
@@ -27,7 +28,7 @@
       <section id="login-section" class="admin-card admin-login">
         <h2>Connexion administrateur</h2>
         <p class="admin-hint">
-          Compte cree avec <code>npm run seed:admin</code> (identifiants dans <code>.env</code> :
+          Compte créé avec <code>npm run seed:admin</code> (identifiants dans <code>.env</code> :
           <code>ADMIN_SEED_USERNAME</code> / <code>ADMIN_SEED_PASSWORD</code>).
         </p>
         <form id="login-form" class="grid">
@@ -58,7 +59,7 @@
           <div class="admin-card">
             <h2>Commandes recues</h2>
             <div class="admin-toolbar">
-              <button id="refresh-btn" class="btn btn-secondary" type="button">Rafraichir</button>
+              <button id="refresh-btn" class="btn btn-secondary" type="button">Rafraîchir</button>
               <button id="export-btn" class="btn btn-secondary" type="button">Exporter CSV</button>
               <button id="clear-btn" class="btn btn-secondary" type="button">Supprimer toutes les commandes</button>
             </div>
@@ -97,6 +98,10 @@
                   <input type="number" id="pf-price" min="0" step="0.01" required />
                 </label>
                 <label>
+                  Catégorie
+                  <select id="pf-category"></select>
+                </label>
+                <label>
                   Ordre d'affichage
                   <input type="number" id="pf-sort" value="0" step="1" />
                 </label>
@@ -109,6 +114,16 @@
                 Description
                 <textarea id="pf-desc" rows="2"></textarea>
               </label>
+              <div class="admin-card admin-card--soft">
+                <h3>Catégories</h3>
+                <div class="admin-toolbar">
+                  <input type="text" id="cat-name" placeholder="Nouvelle catégorie" />
+                  <input type="number" id="cat-sort" placeholder="Ordre" step="1" value="0" />
+                  <button class="btn btn-secondary" type="button" id="cat-add-btn">Ajouter</button>
+                </div>
+                <p id="cat-error" class="admin-error hidden" role="alert"></p>
+                <div id="cat-list" class="chips"></div>
+              </div>
               <label>
                 Photo (JPEG, PNG, WebP, GIF — max 3 Mo)
                 <input type="file" id="pf-image" accept="image/jpeg,image/png,image/webp,image/gif" />
@@ -130,6 +145,7 @@
                 <tr>
                   <th>Photo</th>
                   <th>Nom</th>
+                  <th>Catégorie</th>
                   <th>Prix</th>
                   <th>Visible</th>
                   <th>Ordre</th>
